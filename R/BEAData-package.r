@@ -16,3 +16,4 @@
 #' @docType package
 #' @name BEAData
 NULL
+
