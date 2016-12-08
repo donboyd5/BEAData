@@ -107,11 +107,11 @@ rm(sgdp.a, sgdp.a_all)
 load("./data/sgdp.q.rda")
 glimpse(sgdp.q)
 
-load("./data/sgdp.a.rda")
-glimpse(sgdp.a)
+# load("./data/sgdp.a.rda")
+# glimpse(sgdp.a)
 
-load("./data/sgdp.q_all.rda")
-glimpse(sgdp.q_all)
+# load("./data/sgdp.q_all.rda")
+# glimpse(sgdp.q_all)
 
 load("./data/sgdp.a.rda")
 

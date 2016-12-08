@@ -50,6 +50,25 @@ unzip("./sourceData/SectionAll_xls.zip", exdir=str_sub(currd, 1, -2))
 
 
 #****************************************************************************************************
+#                Why I don't use read_excel ####
+#****************************************************************************************************
+# reproducible example of problem reading xls files from U.S. Bureau of Economic Analysis
+library("readxl")
+tfile <- tempfile()
+download.file("http://www.bea.gov//national/nipaweb/GetCSV.asp?GetWhat=SS_Data/SectionAll_xls.zip&Section=11", tfile, mode="wb")
+unzip(tfile, list=TRUE) # verify that we really have the file
+tdir <- tempdir()
+unzip(tfile, exdir=tdir)
+dir(tdir) # verify that the xls files are there
+excel_sheets(paste0(tdir, "/Section1all_xls.xls")) # verify that we can identify the file we want
+df <- read_excel(paste0(tdir, "/Section1all_xls.xls"), sheet=2)
+df
+# Results in this error:
+# Error in x[needs_ticks] <- paste0("`", gsub("`", "\\\\`", x[needs_ticks]),  : NAs are not allowed in subscripted assignments
+
+
+
+#****************************************************************************************************
 #                Get annual data with xlsx ####
 #****************************************************************************************************
 fn <- "Section1all_xls.xls"
@@ -59,8 +78,8 @@ asheets <- str_subset(xsheets, "Ann")
 qsheets <- str_subset(xsheets, "Qtr")
 
 sheet <- asheets[1]
-df %>% filter(row_number() > start)
-names(df)
+# df %>% filter(row_number() > start)
+# names(df)
 
 getsheet <- function(sheet, fnd){
   df <- read.xlsx(fnd, sheet, header=FALSE, colClasses="character")
@@ -146,8 +165,6 @@ nipa.au <- nipa.a %>%
 devtools::use_data(nipa.au, overwrite=TRUE)
 
 
-
-
 #****************************************************************************************************
 #                Get quarterly data with xlsx ####
 #****************************************************************************************************
@@ -200,7 +217,7 @@ df6 <- getfile(paste0(currd, "Section6all_xls.xls"))
 df7 <- getfile(paste0(currd, "Section7all_xls.xls"))
 
 df <- bind_rows(df1, df2, df3, df4, df5, df6, df7)
-
+df
 count(df, date)
 unique(df$date)
 
