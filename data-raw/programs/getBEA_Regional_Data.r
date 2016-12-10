@@ -56,11 +56,11 @@ dq <- function(qs) {
 # save just the state data as sgdp.a - it also has summaries by region
 # starts in 1997
 
-download.file("http://www.bea.gov/regional/zip/gsp/gsp_naics_all.zip", "./sourceData/gsp_naics_all.zip", mode="wb")
-unzip("./sourceData/gsp_naics_all.zip", list=TRUE)
-# unzip("./sourceData/qgsp_all.zip", exdir=str_sub(currd, 1, -2))
+download.file("http://www.bea.gov/regional/zip/gsp/gsp_naics_all.zip", "./data-raw/gsp_naics_all.zip", mode="wb")
+unzip("./data-raw/gsp_naics_all.zip", list=TRUE)
+# unzip("./data-raw/qgsp_all.zip", exdir=str_sub(currd, 1, -2))
 
-df <- read_csv(unz("./sourceData/gsp_naics_all.zip", "gsp_naics_all.csv"))
+df <- read_csv(unz("./data-raw/gsp_naics_all.zip", "gsp_naics_all.csv"))
 glimpse(df)
 count(df, GeoFIPS, GeoName, Region)
 
@@ -122,11 +122,11 @@ load("./data/sgdp.a.rda")
 # save just the state data as sgdp.q - it also has summaries by region
 # starts in 2005q1
 ugsp <- "http://www.bea.gov/regional/zip/gsp/qgsp_all.zip"
-download.file(ugsp, "./sourceData/qgsp_all.zip", mode="wb")
-unzip("./sourceData/qgsp_all.zip", list=TRUE)
-# unzip("./sourceData/qgsp_all.zip", exdir=str_sub(currd, 1, -2))
+download.file(ugsp, "./data-raw/qgsp_all.zip", mode="wb")
+unzip("./data-raw/qgsp_all.zip", list=TRUE)
+# unzip("./data-raw/qgsp_all.zip", exdir=str_sub(currd, 1, -2))
 
-df <- read_csv(unz("./sourceData/qgsp_all.zip", "qgsp_all.csv"))
+df <- read_csv(unz("./data-raw/qgsp_all.zip", "qgsp_all.csv"))
 glimpse(df)
 count(df, GeoFIPS, GeoName, Region)
 
@@ -173,20 +173,33 @@ rm(sgdp.q, sgdp.q_all)
 load("./data/sgdp.q.rda")
 
 
-
-
 #****************************************************************************************************
-#                Get state annual personal income data ####
+#                DOWNLOAD state annual personal income data ####
 #****************************************************************************************************
 # http://www.bea.gov/regional/zip/spi.zip
+download.file("http://www.bea.gov/regional/zip/spi.zip", "./data-raw/spi.zip", mode="wb")
+unzip("./data-raw/spi.zip", list=TRUE) %>% arrange(desc(Length)) %>% head(20)
+
+# Personal Income, Population, Per Capita Personal Income, Disposable Personal Income, and Per Capita Disposable Personal Income (SA1, SA51)
+# Personal Income and Employment by Major Component (SA4)
+# Personal Income by Major Component and Earnings by Industry (SA5, SA5H, SA5N)
+# Compensation of Employees by Industry (SA6, SA6N)
+# Wages and Salaries by Industry (SA7, SA7H, SA7N)
+# Total Full-Time and Part-Time Employment by Industry (SA25, SA25N)
+# Full-Time and Part-Time Wage and Salary Employment by Industry (SA27, SA27N)
+# Economic Profile (SA30)
+# Personal Current Transfer Receipts (SA35)
+# Property Income (SA40)
+# Farm Income and Expenses (SA45)
+# Personal Current Taxes (SA50)
+
+
+#****************************************************************************************************
+#                Get SA1 state annual personal income data ####
+#****************************************************************************************************
 # save just the state data as spi.a - it also has summaries by region
 # starts in 1997
-
-download.file("http://www.bea.gov/regional/zip/spi.zip", "./sourceData/spi.zip", mode="wb")
-unzip("./sourceData/spi.zip", list=TRUE) %>% arrange(desc(Length)) %>% head(20)
-# unzip("./sourceData/spi.zip", exdir=str_sub(currd, 1, -2))
-
-df <- read_csv(unz("./sourceData/spi.zip", "SA1_1929_2015.csv"))
+df <- read_csv(unz("./data-raw/spi.zip", "SA1_1929_2015.csv"))
 problems(df)
 glimpse(df)
 count(df, GeoFIPS, GeoName, Region)
@@ -227,6 +240,71 @@ spi.a %>% filter(stabbr=="NY") %>% tail(20)
 
 
 
+#****************************************************************************************************
+#                Get SA4 DETAILED COMPONENTS OF state annual personal income data ####
+#****************************************************************************************************
+# LineCode                                                              Description     n
+# <int>                                                                    <chr> <int>
+#   1        10                                   Personal income (thousands of dollars)    60
+# 2        11                                               Nonfarm personal income 1/    60
+# 3        12                                                           Farm income 2/    60
+# 4        20                                                  Population (persons) 3/    60
+# 5        30                                  Per capita personal income (dollars) 4/    60
+# 6        35                                                Earnings by place of work    60
+# 7        36                   Less: Contributions for government social insurance 5/    60
+# 8        37 Employee and self-employed contributions for government social insurance    60
+# 9        38                   Employer contributions for government social insurance    60
+# 10       42                                        Plus: Adjustment for residence 6/    60
+# 11       45                               Equals: Net earnings by place of residence    60
+# 12       46                                   Plus: Dividends, interest, and rent 7/    60
+# 13       47                                 Plus: Personal current transfer receipts    60
+# 14       50                                                       Wages and salaries    60
+# 15       60                                        Supplements to wages and salaries    60
+# 16       61       Employer contributions for employee pension and insurance funds 8/    60
+# 17       62                   Employer contributions for government social insurance    60
+# 18       70                                                   Proprietors' income 9/    60
+# 19       71                                                 Farm proprietors' income    60
+# 20       72                                              Nonfarm proprietors' income    60
+# 21     7010                                                         Total employment    60
+# 22     7020                                               Wage and salary employment    60
+# 23     7040                                                   Proprietors employment    60
+
+unzip("./data-raw/spi.zip", list=TRUE) %>% arrange(desc(Length)) %>% head(20)
+
+df <- read_csv(unz("./data-raw/spi.zip", "SA4_1929_2015__ALL_AREAS.csv"))
+problems(df)
+glimpse(df)
+names(df)[1:7]
+# "GeoFIPS"  "GeoName"  "Region"        "Table"      "LineCode"     "IndustryClassification" "Description
+count(df, GeoFIPS, GeoName, Region)
+count(df, IndustryClassification)
+count(df, LineCode, Description)
+
+df2 <- df %>% mutate(stabbr=stcodes$stabbr[match(str_replace(GeoName, "\\*", ""), stcodes$stname)]) %>%
+  filter(!is.na(LineCode))
+count(df2, stabbr, GeoFIPS, GeoName, Region)
+
+df3 <- df2 %>% filter(!is.na(stabbr)) %>%
+  select(-GeoFIPS, -GeoName, -Region, -Table, -IndustryClassification) %>%
+  rename(line=LineCode, desc=Description) %>%
+  gather(year, value, -stabbr, -line, -desc) %>%
+  mutate(year=as.integer(year), value=as.numeric(value)) %>%
+  filter(!is.na(value))
+glimpse(df3)
+count(df3, line, desc)
+count(df3, stabbr) # includes DC and US
+
+# save real and nominal gdp, all industries, and then go on and save a slim file
+spi.a_all <- df3
+downloaddate <- format(Sys.time(), '%Y-%m-%d')
+comment(spi.a_all) <- paste0("State personal income DETAILS, annual, downloaded ", downloaddate)
+devtools::use_data(spi.a_all, overwrite=TRUE)
+
+load("./data/spi.a_all.rda")
+glimpse(spi.a_all)
+comment(spi.a_all)
+spi_all.a %>% filter(stabbr=="NY") %>% tail(20)
+
 
 #****************************************************************************************************
 #                Get state quarterly personal income data ####
@@ -235,11 +313,11 @@ spi.a %>% filter(stabbr=="NY") %>% tail(20)
 # save just the state data as spi.a - it also has summaries by region
 # starts in 1997
 
-download.file("http://www.bea.gov/regional/zip/sqpi.zip", "./sourceData/sqpi.zip", mode="wb")
-unzip("./sourceData/sqpi.zip", list=TRUE) %>% arrange(desc(Length)) %>% head(20)
-# unzip("./sourceData/sqpi.zip", exdir=str_sub(currd, 1, -2))
+download.file("http://www.bea.gov/regional/zip/sqpi.zip", "./data-raw/sqpi.zip", mode="wb")
+unzip("./data-raw/sqpi.zip", list=TRUE) %>% arrange(desc(Length)) %>% head(20)
+# unzip("./data-raw/sqpi.zip", exdir=str_sub(currd, 1, -2))
 
-df <- read_csv(unz("./sourceData/sqpi.zip", "SQ4_1948_2016_ALL.csv"))
+df <- read_csv(unz("./data-raw/sqpi.zip", "SQ4_1948_2016_ALL.csv"))
 problems(df)
 glimpse(df)
 count(df, GeoFIPS, GeoName, Region)
@@ -286,11 +364,11 @@ spi.q %>% filter(stabbr=="NY") %>% tail(20)
 # save just the state data as spi.a - it also has summaries by region
 # starts in 1997
 
-download.file("http://www.bea.gov/regional/zip/PCEbyState.zip", "./sourceData/PCEbyState.zip", mode="wb")
-unzip("./sourceData/PCEbyState.zip", list=TRUE) %>% arrange(desc(Length)) %>% head(20)
-# unzip("./sourceData/PCEbyState.zip", exdir=str_sub(currd, 1, -2))
+download.file("http://www.bea.gov/regional/zip/PCEbyState.zip", "./data-raw/PCEbyState.zip", mode="wb")
+unzip("./data-raw/PCEbyState.zip", list=TRUE) %>% arrange(desc(Length)) %>% head(20)
+# unzip("./data-raw/PCEbyState.zip", exdir=str_sub(currd, 1, -2))
 
-df <- read_csv(unz("./sourceData/PCEbyState.zip", "PCE_all.csv"))
+df <- read_csv(unz("./data-raw/PCEbyState.zip", "PCE_all.csv"))
 problems(df)
 glimpse(df)
 count(df, GeoFIPS, GeoName, Region)
