@@ -16,4 +16,5 @@
 #' @examples
 #'   nipa.a
 "nipa.a"
+#' comment(nipa.a)
 
