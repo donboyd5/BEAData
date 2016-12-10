@@ -1,7 +1,7 @@
 Package: BEAData
 Type: Package
 Title: BEA Data Files
-Version: 0.2.0
+Version: 0.3.0
 Author: Don Boyd
 Maintainer: <donboyd5@gmail.com>
 Description: Selected BEA data files

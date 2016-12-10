@@ -14,7 +14,9 @@
 #' \item{value}{Units depend upon the table in question, numeric}
 #' }
 #' @examples
-#'   nipa.a
-"nipa.a"
+#' require("BEAData")
+#' nipa.a
 #' comment(nipa.a)
+#'
+"nipa.a"
 

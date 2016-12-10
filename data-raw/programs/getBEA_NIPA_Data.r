@@ -3,6 +3,9 @@
 #****************************************************************************************************
 #                Libraries ####
 #****************************************************************************************************
+
+library("devtools")
+
 library("magrittr")
 library("plyr") # needed for ldply; must be loaded BEFORE dplyr
 library("tidyverse")
@@ -24,14 +27,15 @@ library("zoo") # for rollapply
 library("btools") # library that I created (install from github)
 library("bdata")
 
+# use_build_ignore("data-raw", escape = TRUE, pkg = ".")
+# use_build_ignore("./R/dataConversion", escape = TRUE, pkg = ".")
 
 
 #****************************************************************************************************
 #                Globals ####
 #****************************************************************************************************
-rdat <- "D:/Dropbox/RItems/RData/"
 
-currd <- paste0("./sourceData/", "SectionAll_xls/")
+currd <- paste0("./data-raw/", "SectionAll_xls/")
 
 curr <- "http://www.bea.gov//national/nipaweb/GetCSV.asp?GetWhat=SS_Data/SectionAll_xls.zip&Section=11"
 hist <- "http://www.bea.gov//national/nipaweb/GetCSV.asp?GetWhat=SS_Data/SectionAll_xls_Hist.zip&Section=11"
@@ -40,13 +44,13 @@ hist <- "http://www.bea.gov//national/nipaweb/GetCSV.asp?GetWhat=SS_Data/Section
 #****************************************************************************************************
 #                Download data ####
 #****************************************************************************************************
-download.file(curr, "./sourceData/SectionAll_xls.zip", mode="wb")
-download.file(hist, "./sourceData/SectionAll_xls_Hist.zip", mode="wb")
+download.file(curr, "./data-raw/SectionAll_xls.zip", mode="wb")
+download.file(hist, "./data-raw/SectionAll_xls_Hist.zip", mode="wb")
 
 downloaddate <- format(Sys.time(), '%Y-%m-%d')
 
-unzip("./sourceData/SectionAll_xls.zip", list=TRUE)
-unzip("./sourceData/SectionAll_xls.zip", exdir=str_sub(currd, 1, -2))
+unzip("./data-raw/SectionAll_xls.zip", list=TRUE)
+unzip("./data-raw/SectionAll_xls.zip", exdir=str_sub(currd, 1, -2))
 
 
 #****************************************************************************************************

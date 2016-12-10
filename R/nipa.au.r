@@ -11,6 +11,8 @@
 #' \item{vdesc}{Variable description, character}
 #' }
 #' @examples
-#'   nipa.au
+#' require("BEAData")
+#' nipa.au
+#' comment(nipa.au)
 "nipa.au"
 

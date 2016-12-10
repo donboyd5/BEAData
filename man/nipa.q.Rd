@@ -24,7 +24,9 @@ nipa.q
 NIPA, quarterly, various years.
 }
 \examples{
-  nipa.q
+require("BEAData")
+nipa.q
+comment(nipa.q)
 }
 \keyword{datasets}
 

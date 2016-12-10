@@ -11,6 +11,8 @@
 #' \item{vdesc}{Variable description, character}
 #' }
 #' @examples
-#'   nipa.qu
+#' require("BEAData")
+#' nipa.qu
+#' comment(nipa.qu)
 "nipa.qu"
 

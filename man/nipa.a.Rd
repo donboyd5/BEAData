@@ -24,7 +24,10 @@ nipa.a
 NIPA, annual, various years.
 }
 \examples{
-  nipa.a
+require("BEAData")
+nipa.a
+comment(nipa.a)
+
 }
 \keyword{datasets}
 
