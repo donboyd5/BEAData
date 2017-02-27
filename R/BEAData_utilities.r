@@ -67,7 +67,8 @@ showtab <- function(tabnumc, freq="A"){
   } else if(freq=="Q"){
     tab <- nipa.q %>%
       ungroup %>%
-      filter(tabnum==tabnumc, date==max(date)) %>%
+      filter(tabnum==tabnumc) %>%
+      filter(date==max(date)) %>%
       arrange(tabnum, tabname, line) %>%
       select(-tabnum)
     }
