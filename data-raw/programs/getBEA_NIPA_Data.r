@@ -2,6 +2,8 @@
 # change .gitignore IF want raw data uploaded to github - currently excluded
 # change .Rbuildignore if want raw data included in package - currently excluded
 
+# https://github.com/us-bea/bea.R
+
 #****************************************************************************************************
 #                Libraries ####
 #****************************************************************************************************
