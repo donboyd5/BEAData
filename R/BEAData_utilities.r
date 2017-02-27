@@ -54,13 +54,14 @@ listtabs <- function(freq="A") {
 #' @examples
 #' library("dplyr")
 #' showtab("1.1.1")
-#' showtab("1.1.", "Q")
+#' showtab("1.1.1", "Q")
 showtab <- function(tabnumc, freq="A"){
   requireNamespace("dplyr", quietly = TRUE)
   if(freq=="A"){
     tab <- nipa.a %>%
       ungroup %>%
-      filter(tabnum==tabnumc, year==max(year)) %>%
+      filter(tabnum==tabnumc) %>%
+      filter(year==max(year)) %>%
       arrange(tabnum, tabname, line) %>%
       select(-tabnum)
   } else if(freq=="Q"){

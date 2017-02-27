@@ -20,5 +20,5 @@ Show values in a NIPA.A or NIPA.Q table, for the latest year or quarter.
 \examples{
 library("dplyr")
 showtab("1.1.1")
-showtab("1.1.", "Q")
+showtab("1.1.1", "Q")
 }
