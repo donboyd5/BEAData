@@ -24,4 +24,3 @@ Regional, annual, various years.
   sgdp.a
 }
 \keyword{datasets}
-

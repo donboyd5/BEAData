@@ -25,4 +25,3 @@ State personal consumption expenditures, annual, various years.
   spce.a
 }
 \keyword{datasets}
-

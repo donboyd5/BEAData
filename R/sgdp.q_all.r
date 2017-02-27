@@ -17,4 +17,5 @@
 #' @examples
 #'   sgdp.q_all
 "sgdp.q_all"
+"comment(sgdp.q_all)"
 

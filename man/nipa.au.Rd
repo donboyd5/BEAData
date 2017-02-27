@@ -21,9 +21,7 @@ nipa.au
 NIPA, annual, unique variables, various years.
 }
 \examples{
-require("BEAData")
 nipa.au
 comment(nipa.au)
 }
 \keyword{datasets}
-

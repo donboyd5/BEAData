@@ -25,4 +25,3 @@ State personal income and population, annual, various years.
   spi.a
 }
 \keyword{datasets}
-

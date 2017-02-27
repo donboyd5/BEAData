@@ -13,4 +13,5 @@
 #' @examples
 #'   sgdp.q
 "sgdp.q"
+"comment(sgdp.q)"
 

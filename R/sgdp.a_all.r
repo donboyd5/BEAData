@@ -17,4 +17,4 @@
 #' @examples
 #'   sgdp.a_all
 "sgdp.a_all"
-
+"comment(sgdp.a_all)"

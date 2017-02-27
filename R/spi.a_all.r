@@ -14,4 +14,5 @@
 #' @examples
 #'   spi.a_all
 "spi.a_all"
+"comment(spi.a_all)"
 

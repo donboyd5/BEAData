@@ -18,4 +18,5 @@ Depends:
     R (>= 3.2.2)
 Encoding: UTF-8
 LazyData: TRUE
-RoxygenNote: 5.0.1
+Imports: dplyr
+RoxygenNote: 6.0.1

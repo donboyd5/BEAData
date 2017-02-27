@@ -14,9 +14,7 @@
 #' \item{value}{Units depend upon the table in question, numeric}
 #' }
 #' @examples
-#' require("BEAData")
 #' nipa.a
 #' comment(nipa.a)
-#'
-"nipa.a"
+"nipa.a" # so that we can link to here from BEAData.Rd
 

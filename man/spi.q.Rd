@@ -25,4 +25,3 @@ State personal income components and selected other variables, various years.
   spi.q
 }
 \keyword{datasets}
-

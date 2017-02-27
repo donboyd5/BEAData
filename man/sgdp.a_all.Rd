@@ -28,4 +28,3 @@ Regional, annual all components, various years.
   sgdp.a_all
 }
 \keyword{datasets}
-

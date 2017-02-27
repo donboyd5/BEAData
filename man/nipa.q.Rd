@@ -29,4 +29,3 @@ nipa.q
 comment(nipa.q)
 }
 \keyword{datasets}
-

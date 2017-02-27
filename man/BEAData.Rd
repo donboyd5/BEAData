@@ -19,4 +19,3 @@ Currently includes:\cr
 \code{\link{spi.a}} BEA Regional state personal income data, annual\cr
 \code{\link{spi.q}} BEA Regional state personal income data, quarterly\cr
 }
-

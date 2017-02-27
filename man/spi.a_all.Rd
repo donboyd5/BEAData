@@ -25,4 +25,3 @@ Regional, annual all components, various years.
   spi.a_all
 }
 \keyword{datasets}
-
