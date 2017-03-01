@@ -45,7 +45,7 @@ listtabs <- function(freq="A") {
 }
 
 
-#' Show values in a NIPA.A or NIPA.Q table, for the latest year or quarter.
+#' Show values in a NIPA.A or NIPA.Q table, in line order, for the latest year or quarter.
 #'
 #' @param tabnumc the table number, as character (e.g., "1.1.1" or "1.1.5")
 #' @param freq "A" (annual) or "Q" (quarterly). Defaults to "A".

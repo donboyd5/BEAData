@@ -2,7 +2,7 @@
 % Please edit documentation in R/BEAData_utilities.r
 \name{showtab}
 \alias{showtab}
-\title{Show values in a NIPA.A or NIPA.Q table, for the latest year or quarter.}
+\title{Show values in a NIPA.A or NIPA.Q table, in line order, for the latest year or quarter.}
 \usage{
 showtab(tabnumc, freq = "A")
 }
@@ -15,7 +15,7 @@ showtab(tabnumc, freq = "A")
 vector with table numbers and descriptions
 }
 \description{
-Show values in a NIPA.A or NIPA.Q table, for the latest year or quarter.
+Show values in a NIPA.A or NIPA.Q table, in line order, for the latest year or quarter.
 }
 \examples{
 library("dplyr")

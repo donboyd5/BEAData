@@ -57,6 +57,8 @@ dq <- function(qs) {
 # starts in 1997
 
 download.file("http://www.bea.gov/regional/zip/gsp/gsp_naics_all.zip", "./data-raw/gsp_naics_all.zip", mode="wb")
+downloaddate <- format(Sys.time(), '%Y-%m-%d')
+
 unzip("./data-raw/gsp_naics_all.zip", list=TRUE)
 # unzip("./data-raw/qgsp_all.zip", exdir=str_sub(currd, 1, -2))
 
@@ -87,6 +89,8 @@ count(df4, ind, indclass, indname)
 
 # save real and nominal gdp, all industries, and then go on and save a slim file
 sgdp.a_all <- df4
+comment(sgdp.a_all) <- paste0("State GDP all variables, annual, downloaded ", downloaddate)
+comment(sgdp.a_all)
 devtools::use_data(sgdp.a_all, overwrite=TRUE)
 
 # now save slimmed down file
@@ -98,22 +102,23 @@ df5 <- sgdp.a_all %>% filter(ind==1, component %in% c(200, 900)) %>%
 glimpse(df5)
 
 sgdp.a <- df5
+comment(sgdp.a) <- paste0("State nominal and real GDP, annual, downloaded ", downloaddate)
+comment(sgdp.a)
 devtools::use_data(sgdp.a, overwrite=TRUE)
 
 rm(df, df2, df3, df4, df5)
 rm(sgdp.a, sgdp.a_all)
 
 
-load("./data/sgdp.q.rda")
-glimpse(sgdp.q)
+load("./data/sgdp.a.rda")
+glimpse(sgdp.a)
+comment(sgdp.a)
 
 # load("./data/sgdp.a.rda")
 # glimpse(sgdp.a)
 
 # load("./data/sgdp.q_all.rda")
 # glimpse(sgdp.q_all)
-
-load("./data/sgdp.a.rda")
 
 
 #****************************************************************************************************
@@ -123,6 +128,8 @@ load("./data/sgdp.a.rda")
 # starts in 2005q1
 ugsp <- "http://www.bea.gov/regional/zip/gsp/qgsp_all.zip"
 download.file(ugsp, "./data-raw/qgsp_all.zip", mode="wb")
+downloaddate <- format(Sys.time(), '%Y-%m-%d')
+
 unzip("./data-raw/qgsp_all.zip", list=TRUE)
 # unzip("./data-raw/qgsp_all.zip", exdir=str_sub(currd, 1, -2))
 
@@ -154,6 +161,8 @@ count(df4, ind, indclass, indname)
 
 # save real and nominal gdp, all industries, and then go on and save a slim file
 sgdp.q_all <- df4
+comment(sgdp.q_all) <- paste0("State GDP all variables, quarterly, downloaded ", downloaddate)
+comment(sgdp.q_all)
 devtools::use_data(sgdp.q_all, overwrite=TRUE)
 
 # now save slimmed down file
@@ -165,6 +174,8 @@ df5 <- sgdp.q_all %>% filter(ind==1, component %in% c(200, 900)) %>%
 glimpse(df5)
 
 sgdp.q <- df5
+comment(sgdp.q) <- paste0("State nominal and real GDP, quarterly, downloaded ", downloaddate)
+comment(sgdp.q)
 devtools::use_data(sgdp.q, overwrite=TRUE)
 
 rm(df, df2, df3, df4, df5)
@@ -178,7 +189,10 @@ load("./data/sgdp.q.rda")
 #****************************************************************************************************
 # http://www.bea.gov/regional/zip/spi.zip
 download.file("http://www.bea.gov/regional/zip/spi.zip", "./data-raw/spi.zip", mode="wb")
+downloaddate <- format(Sys.time(), '%Y-%m-%d')
 unzip("./data-raw/spi.zip", list=TRUE) %>% arrange(desc(Length)) %>% head(20)
+# tmp <- unzip("./data-raw/spi.zip", list=TRUE)
+
 
 # Personal Income, Population, Per Capita Personal Income, Disposable Personal Income, and Per Capita Disposable Personal Income (SA1, SA51)
 # Personal Income and Employment by Major Component (SA4)
@@ -229,7 +243,6 @@ count(df4, stabbr) # includes DC and US
 
 # save real and nominal gdp, all industries, and then go on and save a slim file
 spi.a <- df4
-downloaddate <- format(Sys.time(), '%Y-%m-%d')
 comment(spi.a) <- paste0("State personal income ($b) and population (#k), annual, downloaded ", downloaddate)
 devtools::use_data(spi.a, overwrite=TRUE)
 

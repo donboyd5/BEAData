@@ -1,18 +1,10 @@
 Package: BEAData
 Type: Package
 Title: BEA Data Files
-Version: 0.3.0
+Version: 0.4.0
 Author: Don Boyd
 Maintainer: <donboyd5@gmail.com>
-Description: Selected BEA data files
-    nipa.a  annual.
-    nipa.au annual with unique variables.
-    nipa.q  quarterly.
-    nipa.qu quarterly with unique variables.
-    sgdp_all.q quarterly, all values.
-    sgdp.q  quarterly, just gdp and rgdp.
-    sgdp.a_all  annual, all values.
-    sgdp.a  annual, just gdp and rgdp.
+Description: Selected national and state-level regional BEA data, annual and quarterly.
 License: GPL-2
 Depends:
     R (>= 3.2.2)
