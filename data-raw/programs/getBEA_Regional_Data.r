@@ -11,7 +11,7 @@
 library("magrittr")
 library("plyr") # needed for ldply; must be loaded BEFORE dplyr
 library("tidyverse")
-options(tibble.print_max = 60, tibble.print_min = 60) # if more than 60 rows, print 60 - enough for states
+options(tibble.print_max = 70, tibble.print_min = 70) # if more than x rows, print x - enough for states
 # ggplot2 tibble tidyr readr purrr dplyr
 
 library("hms") # hms, for times.
@@ -42,10 +42,10 @@ library("bdata")
 #****************************************************************************************************
 dq <- function(qs) {
   # convert year-q format e.g., 2005Q1 to a date, first day of quarter
-  as.Date(ymd(paste(str_sub(qs, 1, 4), as.numeric(str_sub(qs, 6)) * 3 - 2, 1)))
+  as.Date(lubridate::ymd(paste(stringr::str_sub(qs, 1, 4), as.numeric(stringr::str_sub(qs, 6)) * 3 - 2, 1)))
 }
 
-
+# dq("1995Q3")
 
 #****************************************************************************************************
 #                Get state annual gdp data ####
@@ -329,15 +329,18 @@ spi_all.a %>% filter(stabbr=="NY") %>% tail(20)
 download.file("http://www.bea.gov/regional/zip/sqpi.zip", "./data-raw/sqpi.zip", mode="wb")
 unzip("./data-raw/sqpi.zip", list=TRUE) %>% arrange(desc(Length)) %>% head(20)
 # unzip("./data-raw/sqpi.zip", exdir=str_sub(currd, 1, -2))
+# file names can change - pick the correct SQ4 name
 
-df <- read_csv(unz("./data-raw/sqpi.zip", "SQ4_1948_2016_ALL.csv"))
+df <- read_csv(unz("./data-raw/sqpi.zip", "SQ4_1948_2016__ALL_AREAS.csv"))
 problems(df)
 glimpse(df)
-count(df, GeoFIPS, GeoName, Region)
+count(df, GeoFIPS, GeoName, Region) %>% as.data.frame
 count(df, IndustryClassification) # all are ...
 count(df, LineCode, Description)
 
-df2 <- df %>% mutate(stabbr=stcodes$stabbr[match(str_replace(GeoName, "\\*", ""), stcodes$stname)])
+
+# df2 <- df %>% mutate(stabbr=stcodes$stabbr[match(str_replace(GeoName, "\\*", ""), stcodes$stname)])
+df2 <- df %>% mutate(stabbr=stcodes$stabbr[match(str_sub(GeoFIPS, 1, 2), stcodes$stfips)])
 count(df2, stabbr, GeoFIPS, GeoName, Region)
 
 df3 <- df2 %>% filter(!is.na(stabbr)) %>%
@@ -346,23 +349,59 @@ df3 <- df2 %>% filter(!is.na(stabbr)) %>%
   select(-GeoFIPS, -GeoName, -Region, -Table, -IndustryClassification) %>%
   gather(yearq, value, -stabbr, -line, -description) %>%
   mutate(value=as.numeric(value)) %>%
-  filter(!is.na(value))
+  filter(!is.na(value)) %>%
+  mutate(date=dq(yearq))
+
 glimpse(df3)
+count(df3, yearq, date)
 count(df3, line, description)
-count(df3, year) %>% ht
 count(df3, stabbr) # includes DC and US
 
-df4 <- df3 %>%
-  mutate(date=dq(yearq)) %>%
-  select(-yearq) %>%
-  select(stabbr, date, line, description, value)
+# add vnames
+vnames <- read_csv("line, vname
+10, spi
+11, nonfarmpi
+12, farmpi
+20, pop
+30, pcpi
+35, earn.pow
+36, c.socins
+37, eec.socins
+38, erc.socins
+42, resadj
+45, netearn.por
+46, divintrent
+47, perstransf
+50, wages
+60, wagesups
+61, erc.pension
+62, erc.socins2
+70, propinc
+71, farmprop.inc
+72, nonfarm.propinc")
+vnames %>% left_join(count(df3, line, description))
+
+
+df4 <- df3 %>% left_join(vnames) %>%
+  select(stabbr, date, line, vname, description, value)
 glimpse(df4)
 
-# save real and nominal gdp, all industries, and then go on and save a slim file
-spi.q <- df4
+df4 %>% select(stabbr, date, vname, value) %>% spread(vname, value)
+
+# save
 downloaddate <- format(Sys.time(), '%Y-%m-%d')
+
+spi.q <- df4
 comment(spi.q) <- paste0("State personal income components and selected other variables, quarterly, downloaded ", downloaddate)
 devtools::use_data(spi.q, overwrite=TRUE)
+
+spiw.q <- spi.q %>% select(stabbr, date, vname, value) %>%
+  spread(vname, value)
+glimpse(spiw.q)
+comment(spiw.q) <- paste0("State personal income components and selected other variables, wide, quarterly, downloaded ",
+                          downloaddate)
+devtools::use_data(spiw.q, overwrite=TRUE)
+
 
 load("./data/spi.q.rda")
 glimpse(spi.q)
