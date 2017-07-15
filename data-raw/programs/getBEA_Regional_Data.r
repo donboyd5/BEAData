@@ -46,6 +46,11 @@ dq <- function(qs) {
   as.Date(lubridate::ymd(paste(stringr::str_sub(qs, 1, 4), as.numeric(stringr::str_sub(qs, 6)) * 3 - 2, 1)))
 }
 
+dq2 <- function(qs) {
+  # convert year-q format e.g., 2005:Q1 to a date, first day of quarter
+  as.Date(lubridate::ymd(paste(stringr::str_sub(qs, 1, 4), as.numeric(stringr::str_sub(qs, 7)) * 3 - 2, 1)))
+}
+
 # dq("1995Q3")
 
 #****************************************************************************************************
@@ -351,7 +356,7 @@ df3 <- df2 %>% filter(!is.na(stabbr)) %>%
   gather(yearq, value, -stabbr, -line, -description) %>%
   mutate(value=as.numeric(value)) %>%
   filter(!is.na(value)) %>%
-  mutate(date=dq(yearq))
+  mutate(date=dq2(yearq))
 
 glimpse(df3)
 count(df3, yearq, date)
