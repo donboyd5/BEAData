@@ -1,3 +1,4 @@
+# 7/15/2017 djb Need to fix state quarterly personal income and personal consumption.
 
 # Note that as of now (11/16/2016) I am using git but have not uploaded this to the github site.
 
@@ -213,7 +214,7 @@ unzip("./data-raw/spi.zip", list=TRUE) %>% arrange(desc(Length)) %>% head(20)
 #****************************************************************************************************
 # save just the state data as spi.a - it also has summaries by region
 # starts in 1997
-df <- read_csv(unz("./data-raw/spi.zip", "SA1_1929_2015.csv"))
+df <- read_csv(unz("./data-raw/spi.zip", "SA1_1929_2016.csv"))
 problems(df)
 glimpse(df)
 count(df, GeoFIPS, GeoName, Region)
@@ -284,7 +285,7 @@ spi.a %>% filter(stabbr=="NY") %>% tail(20)
 
 unzip("./data-raw/spi.zip", list=TRUE) %>% arrange(desc(Length)) %>% head(20)
 
-df <- read_csv(unz("./data-raw/spi.zip", "SA4_1929_2015__ALL_AREAS.csv"))
+df <- read_csv(unz("./data-raw/spi.zip", "SA4_1929_2016__ALL_AREAS.csv"))
 problems(df)
 glimpse(df)
 names(df)[1:7]
@@ -316,7 +317,7 @@ devtools::use_data(spi.a_all, overwrite=TRUE)
 load("./data/spi.a_all.rda")
 glimpse(spi.a_all)
 comment(spi.a_all)
-spi_all.a %>% filter(stabbr=="NY") %>% tail(20)
+spi.a_all %>% filter(stabbr=="NY") %>% tail(20)
 
 
 #****************************************************************************************************
@@ -331,7 +332,7 @@ unzip("./data-raw/sqpi.zip", list=TRUE) %>% arrange(desc(Length)) %>% head(20)
 # unzip("./data-raw/sqpi.zip", exdir=str_sub(currd, 1, -2))
 # file names can change - pick the correct SQ4 name
 
-df <- read_csv(unz("./data-raw/sqpi.zip", "SQ4_1948_2016__ALL_AREAS.csv"))
+df <- read_csv(unz("./data-raw/sqpi.zip", "SQ4_1948_2017__ALL_AREAS.csv"))
 problems(df)
 glimpse(df)
 count(df, GeoFIPS, GeoName, Region) %>% as.data.frame

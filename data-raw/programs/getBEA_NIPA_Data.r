@@ -1,4 +1,7 @@
 
+# Advanced downloads:
+# https://www.bea.gov//national/nipaweb/DownSS2.asp
+
 # change .gitignore IF want raw data uploaded to github - currently excluded
 # change .Rbuildignore if want raw data included in package - currently excluded
 
@@ -41,9 +44,17 @@ library("bdata")
 
 currd <- paste0("./data-raw/", "SectionAll_xls/")
 
-curr <- "http://www.bea.gov//national/nipaweb/GetCSV.asp?GetWhat=SS_Data/SectionAll_xls.zip&Section=11"
-hist <- "http://www.bea.gov//national/nipaweb/GetCSV.asp?GetWhat=SS_Data/SectionAll_xls_Hist.zip&Section=11"
+# https://www.bea.gov//national/nipaweb/SS_Data/SectionAll_csv.zip
+# https://www.bea.gov//national/nipaweb/SS_Data/SectionAll_csv_Hist.zip
 
+# curr <- "http://www.bea.gov//national/nipaweb/GetCSV.asp?GetWhat=SS_Data/SectionAll_xls.zip&Section=11"
+# hist <- "http://www.bea.gov//national/nipaweb/GetCSV.asp?GetWhat=SS_Data/SectionAll_xls_Hist.zip&Section=11"
+
+# curr <- "https://www.bea.gov//national/nipaweb/SS_Data/SectionAll_csv.zip"
+# hist <- "https://www.bea.gov//national/nipaweb/SS_Data/SectionAll_csv_Hist.zip"
+
+curr <- "https://www.bea.gov//national/nipaweb/SS_Data/SectionAll_xls.zip"
+hist <- "https://www.bea.gov//national/nipaweb/SS_Data/SectionAll_xls_Hist.zip"
 
 #****************************************************************************************************
 #                Download data ####
@@ -56,6 +67,8 @@ downloaddate <- format(Sys.time(), '%Y-%m-%d')
 unzip("./data-raw/SectionAll_xls.zip", list=TRUE) # see what is in the archive
 unzip("./data-raw/SectionAll_xls.zip", exdir=str_sub(currd, 1, -2)) # now extract the files
 
+# 7/15/2017 THIS IS A PAIN BUT SAVE EACH FILE AS XLSX!!!! ####
+
 
 #****************************************************************************************************
 #                Get annual data with read_excel - CAUTION: use col_names=FALSE  ####
@@ -66,15 +79,13 @@ xsheets <- excel_sheets(fnd)
 asheets <- str_subset(xsheets, "Ann")
 qsheets <- str_subset(xsheets, "Qtr")
 
-sheet <- asheets[1]
-# df %>% filter(row_number() > start)
-# names(df)
 
 getsheet.a <- function(sheet, fnd){
+  #print(sheet)
   df <- read_excel(fnd, sheet, col_names=FALSE)
   df2 <- df %>% mutate_all(as.character)
   names(df2)[1:3] <- c("line", "vdesc", "vname")
-  start <- which(df2$line=="Line")
+  start <- which(df2$line=="Line")[1]
   years <- df2[start, -c(1:3)] %>% t %>% as.numeric
   names(df2) <- c(names(df2)[1:3], years)
   tabname <- df2[1, 1] %>% as.character
@@ -89,6 +100,9 @@ getsheet.a <- function(sheet, fnd){
   return(df3)
 }
 
+# fnd <- paste0(currd, "Section1all_xls.xlsx")
+# sheet <- "10404 Ann"
+
 getfile.a <- function(fnd){
   xsheets <- excel_sheets(fnd)
   asheets <- str_subset(xsheets, "Ann")
@@ -97,13 +111,14 @@ getfile.a <- function(fnd){
   return(df)
 }
 
-df1a <- getfile.a(paste0(currd, "Section1all_xls.xls"))
-df2a <- getfile.a(paste0(currd, "Section2all_xls.xls"))
-df3a <- getfile.a(paste0(currd, "Section3all_xls.xls"))
-df4a <- getfile.a(paste0(currd, "Section4all_xls.xls"))
-df5a <- getfile.a(paste0(currd, "Section5all_xls.xls"))
-df6a <- getfile.a(paste0(currd, "Section6all_xls.xls"))
-df7a <- getfile.a(paste0(currd, "Section7all_xls.xls"))
+# NOTE the xlsx extensions! ----
+df1a <- getfile.a(paste0(currd, "Section1all_xls.xlsx"))
+df2a <- getfile.a(paste0(currd, "Section2all_xls.xlsx"))
+df3a <- getfile.a(paste0(currd, "Section3all_xls.xlsx"))
+df4a <- getfile.a(paste0(currd, "Section4all_xls.xlsx"))
+df5a <- getfile.a(paste0(currd, "Section5all_xls.xlsx"))
+df6a <- getfile.a(paste0(currd, "Section6all_xls.xlsx"))
+df7a <- getfile.a(paste0(currd, "Section7all_xls.xlsx"))
 
 dfa <- bind_rows(df1a, df2a, df3a, df4a, df5a, df6a, df7a) %>% as_tibble # much faster to list tibble than data frame
 glimpse(dfa)
@@ -199,13 +214,14 @@ getfile.q <- function(fnd){
   return(df)
 }
 
-df1q <- getfile.q(paste0(currd, "Section1all_xls.xls"))
-df2q <- getfile.q(paste0(currd, "Section2all_xls.xls"))
-df3q <- getfile.q(paste0(currd, "Section3all_xls.xls"))
-df4q <- getfile.q(paste0(currd, "Section4all_xls.xls"))
-df5q <- getfile.q(paste0(currd, "Section5all_xls.xls"))
-df6q <- getfile.q(paste0(currd, "Section6all_xls.xls"))
-df7q <- getfile.q(paste0(currd, "Section7all_xls.xls"))
+# NOTE xlsx extension! must create the xlsx files ----
+df1q <- getfile.q(paste0(currd, "Section1all_xls.xlsx"))
+df2q <- getfile.q(paste0(currd, "Section2all_xls.xlsx"))
+df3q <- getfile.q(paste0(currd, "Section3all_xls.xlsx"))
+df4q <- getfile.q(paste0(currd, "Section4all_xls.xlsx"))
+df5q <- getfile.q(paste0(currd, "Section5all_xls.xlsx"))
+df6q <- getfile.q(paste0(currd, "Section6all_xls.xlsx"))
+df7q <- getfile.q(paste0(currd, "Section7all_xls.xlsx"))
 
 dfq <- bind_rows(df1q, df2q, df3q, df4q, df5q, df6q, df7q) %>% as_tibble
 glimpse(dfq) # don't simply list df unless it is a tibble - that is too slow if a dataframe
