@@ -4,7 +4,7 @@
 \alias{getgdppi}
 \title{Get a data frame with the GDP price index, either annual or quarterly.}
 \usage{
-getgdppi(freq = "A")
+getgdppi(gfreq = "A")
 }
 \arguments{
 \item{freq}{"A" (annual) or "Q" (quarterly). Defaults to "A".}
