@@ -3,5 +3,4 @@
 export(getNIPATable)
 export(getNIPAvarinfo)
 export(getgdppi)
-export(listtabs)
-export(showtab)
+import(dplyr)

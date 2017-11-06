@@ -6,17 +6,15 @@
 #'
 #' National data files:
 #' \tabular{lll}{
-#' \code{\link{nipa.a}}  \tab  \tab National Income and Products Accounts, annual\cr
-#' \code{\link{nipa.au}} \tab   \tab National Income and Products Accounts, annual, unique variables\cr
-#' \code{\link{nipa.q}} \tab   \tab National Income and Products Accounts, quarterly\cr
-#' \code{\link{nipa.qu}} \tab   \tab National Income and Products Accounts, quarterly, unique variables\cr
+#' \code{\link{nipa}}  \tab  \tab National Income and Products Accounts, annual, quarterly, and monthly\cr
+#' \code{\link{NIPAvars}}  \tab  \tab Information on variables in the National Income and Products Accounts\cr
 #' }
 #'
 #' Functions for national data:
 #' \tabular{lll}{
 #' \code{\link{getgdppi}}  \tab  \tab Get a data frame with the GDP price index, either annual or quarterly.\cr
-#' \code{\link{listtabs}} \tab   \tab Get a list of NIPA.A or NIPA.Q table numbers and descriptions.\cr
-#' \code{\link{showtab}} \tab   \tab Show values in a NIPA.A or NIPA.Q table, in line order, for the latest year or quarter.\cr
+#' \code{\link{getNIPATable}} \tab   \tab Return a NIPA table descriptive information as a data frame.\cr
+#' \code{\link{getNIPAvarinfo}} \tab   \tab Get a data frame with information on a variable in a specific BEA table and line number.\cr
 #' }
 #'
 #' State data files:

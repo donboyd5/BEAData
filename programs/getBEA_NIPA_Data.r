@@ -37,6 +37,8 @@ library("bdata")
 # use_build_ignore("data-raw", escape = TRUE, pkg = ".")
 # use_build_ignore("./R/dataConversion", escape = TRUE, pkg = ".")
 
+devtools::use_package("dplyr")
+
 
 #****************************************************************************************************
 #                Globals ####

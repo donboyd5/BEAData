@@ -2,7 +2,7 @@
 % Please edit documentation in R/BEAData_utilities.r
 \name{getNIPATable}
 \alias{getNIPATable}
-\title{Get a data frame with the GDP price index, either annual or quarterly.}
+\title{Return a NIPA table descriptive information as a data frame.}
 \usage{
 getNIPATable(gtabnum)
 }
@@ -13,12 +13,15 @@ getNIPATable(gtabnum)
 data frame sorted by line number, with:
 
    vname   BEA variable (series) name
+
    line    line number
+
    vdesc   variable description
+
    tabname full table name
 }
 \description{
-Get a data frame with the GDP price index, either annual or quarterly.
+Return a NIPA table descriptive information as a data frame.
 }
 \examples{
 library("dplyr")

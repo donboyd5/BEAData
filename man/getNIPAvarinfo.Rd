@@ -15,9 +15,13 @@ getNIPAvarinfo(gtabnum, gline)
 A one-row data frame for the variable, with:
 
    tabnum  BEA table number (just the number, as character)
+
    line    line number
+
    vname   BEA variable (series) name
+
    vdesc   variable description
+
    tabname full table name
 }
 \description{

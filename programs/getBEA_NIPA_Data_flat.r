@@ -33,6 +33,11 @@ library("BEAData")
 library("apitools")
 
 
+# CAUTION ----
+# not sure this is the best place to put this
+devtools::use_package("dplyr")
+# END CAUTION ----
+
 #****************************************************************************************************
 #                Functions ####
 #****************************************************************************************************
@@ -189,5 +194,9 @@ nipa %>%
   filter(vname=="A001RC") %>%
   filter(year>=2000) %>%
   ggplot(aes(date, value, colour=freq)) + geom_line()
+
+
+memory()
+
 
 

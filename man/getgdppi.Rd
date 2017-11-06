@@ -7,7 +7,7 @@
 getgdppi(gfreq = "A")
 }
 \arguments{
-\item{freq}{"A" (annual) or "Q" (quarterly). Defaults to "A".}
+\item{gfreq}{"A" (annual) or "Q" (quarterly). Defaults to "A".}
 }
 \value{
 data frame with:
