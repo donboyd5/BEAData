@@ -167,7 +167,7 @@ dfm2 <- dfm %>%
                                 str_sub(Period, -2, -1),
                                 "01", sep="-"))),
          year=year(date) %>% as.integer,
-         freq="Q") %>%
+         freq="M") %>%
   left_join(vars2 %>% select(vname, vdesc)) %>%
   select(vname, date, year, freq, value, vdesc)
 dfm2 %>% filter(vname=="A034RC") %>% ht
