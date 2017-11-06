@@ -18,6 +18,7 @@ NULL # applies everywhere (to all functions)
 #' getgdppi()
 #' getgdppi("Q")
 getgdppi <- function(gfreq="A"){
+  vname <- freq <- date <- year <- value <- NULL # fool R CMD check
   gdppi <- BEAData::nipa %>%
     filter(vname=="A191RG", freq==gfreq) %>%
     select(date, year, freq, gdppi=value)
@@ -44,6 +45,7 @@ getgdppi <- function(gfreq="A"){
 #' getNIPATable("1.1.1")
 #' getNIPATable("3.3")
 getNIPATable <- function(gtabnum) {
+  tabnum <- line <- vname <- vdesc <- tabname <- NULL # fool R CMD check
   BEAData::NIPAvars %>% filter(tabnum==gtabnum) %>%
     arrange(line) %>%
     select(vname, line, vdesc, tabname)
@@ -72,6 +74,7 @@ getNIPATable <- function(gtabnum) {
 #' getNIPAvarinfo("3.3", 1)
 #' getNIPAvarinfo("2.3.2", 4)
 getNIPAvarinfo <- function(gtabnum, gline){
+  tabnum <- line <- vname <- vdesc <- tabname <- NULL # fool R CMD check
   vname <- BEAData::NIPAvars %>%
     filter(tabnum==gtabnum, line==gline) %>%
     select(tabnum, line, vname, vdesc, tabname)
