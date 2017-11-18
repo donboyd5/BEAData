@@ -52,6 +52,46 @@ getNIPATable <- function(gtabnum) {
 }
 
 
+#' Return a NIPA table descriptive information as a data frame, with data for 2 latest years.
+#'
+#' @param gtabnum BEA table number to get, as character, with no trailing period. For example, "1.1.1"
+#' @return data frame sorted by line number, with:
+#'
+#'    vname   BEA variable (series) name
+#'
+#'    line    line number
+#'
+#'    vdesc   variable description
+#'
+#'    ynum1   value for 2nd-to-latest year
+#'
+#'    ynum2   value for latest year
+#'
+#'    tabname full table name
+#'
+#' @export
+#' @examples
+#' library("dplyr")
+#' getNIPATableValue("1.1.1")
+#' getNIPATableValue("3.3")
+getNIPATableValue <- function(gtabnum) {
+  tabnum <- line <- vname <- vdesc <- tabname <- freq <- year <- value <- NULL # fool R CMD check
+  maxyear <- BEAData::nipa[BEAData::nipa$freq=="A", ]$year %>% max
+  df <- getNIPATable(gtabnum)
+  df2 <- BEAData::nipa %>%
+    filter(freq=="A",
+           vname %in% df$vname,
+           year %in% (maxyear - 1):maxyear) %>%
+    select(vname, year, value) %>%
+    mutate(year=paste0("y", year)) %>%
+    spread(year, value)
+  df3 <- df %>%
+    left_join(df2) %>%
+    select(vname, line, vdesc, starts_with("y"), tabname)
+  return(df3)
+}
+
+
 #' Get a data frame with information on a variable in a specific BEA table and line number.
 #'
 #' @param gtabnum BEA table number of desired variable, as character, with no trailing period. For example, "1.1.1".

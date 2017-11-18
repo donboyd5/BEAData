@@ -56,6 +56,8 @@ devtools::use_package("dplyr")
 #****************************************************************************************************
 #                Explore ####
 #****************************************************************************************************
+glimpse(nipa)
+count(nipa, freq)
 glimpse(nipa.a)
 glimpse(nipa.au)
 
@@ -70,6 +72,9 @@ b.url <- "https://www.bea.gov/national/Release/TXT/FlatFiles.ZIP"
 b.file <- tempfile()
 system.time(download.file(b.url, b.file, mode="wb")) # 12 secs
 unzip(b.file, list=TRUE)
+
+release_date <- unzip(b.file, list=TRUE)$Date %>% as.Date %>% min
+
 
 vars <- read_csv(unz(b.file, "SeriesRegister.txt"))
 vars2 <- vars %>%
@@ -105,6 +110,9 @@ d <- count(NIPAvars, table, tabnum, tabname)
 getNIPATable("1.1.1")
 getNIPATable("3.3")
 
+tmp <- getNIPATable("3.3")
+glimpse(tmp)
+tmp %>% select(-tabname)
 
 # gtabnum <- "3.3"
 # gtabnum <- "2.3.2"
@@ -181,9 +189,9 @@ glimpse(dfq2)
 glimpse(dfm2)
 
 nipa <- bind_rows(dfa2, dfq2, dfm2)
-downloaddate <- format(Sys.time(), '%Y-%m-%d')
+# downloaddate <- format(Sys.time(), '%Y-%m-%d')
 
-comment(nipa) <- paste0("NIPA data all tables, Annual, quarterly, and monthly, downloaded ", downloaddate)
+comment(nipa) <- paste0("NIPA data all tables, Annual, quarterly, and monthly, released ", release_date)
 comment(nipa)
 glimpse(nipa)
 devtools::use_data(nipa, overwrite=TRUE)
