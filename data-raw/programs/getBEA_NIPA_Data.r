@@ -6,6 +6,7 @@
 # change .Rbuildignore if want raw data included in package - currently excluded
 
 # https://github.com/us-bea/bea.R
+# djb
 
 #****************************************************************************************************
 #                Libraries ####
