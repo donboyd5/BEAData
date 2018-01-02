@@ -34,8 +34,10 @@ library("apitools")
 
 
 # CAUTION ----
-# not sure this is the best place to put this
-devtools::use_package("dplyr")
+# update the description file to ensure that these packages are imported
+usethis::use_package("tidyverse")
+# usethis::use_package("tidyr")
+# usethis::use_package("magrittr")
 # END CAUTION ----
 
 #****************************************************************************************************
@@ -56,10 +58,9 @@ devtools::use_package("dplyr")
 #****************************************************************************************************
 #                Explore ####
 #****************************************************************************************************
+data(package="BEAData")
 glimpse(nipa)
 count(nipa, freq)
-glimpse(nipa.a)
-glimpse(nipa.au)
 
 # vname c, year i, value d, vdesc c; add tabnum.first c, tabname.first c, line i
 # tabnum is of form "1.1.1"
@@ -179,6 +180,9 @@ dfm2 <- dfm %>%
   left_join(vars2 %>% select(vname, vdesc)) %>%
   select(vname, date, year, freq, value, vdesc)
 dfm2 %>% filter(vname=="A034RC") %>% ht
+glimpse(dfm2)
+ht(dfm2)
+anyDuplicated(dfm2)
 
 
 #****************************************************************************************************
@@ -198,10 +202,23 @@ devtools::use_data(nipa, overwrite=TRUE)
 
 devtools::use_data(NIPAvars, overwrite=TRUE)
 
+
+#****************************************************************************************************
+#                Explore final file ####
+#****************************************************************************************************
+glimpse(tabs)
+tabs$TableTitle[1:10]
+getNIPATable("1.1.6")
+var <- "A191RX" # real GDP
+var <- "A829RX" # real GDP component, state and local govt
 nipa %>%
-  filter(vname=="A001RC") %>%
+  filter(vname==var) %>%
   filter(year>=2000) %>%
-  ggplot(aes(date, value, colour=freq)) + geom_line()
+  ggplot(aes(date, value / 1e6, colour=freq)) +
+  geom_line() + geom_point() +
+  scale_x_date(date_breaks="2 years", date_labels = "%Y") +
+  scale_y_continuous(name="$ billions, real") +
+  ggtitle(paste0(var, ": Real GDP component, $ billions"))
 
 
 memory()

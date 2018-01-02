@@ -10,5 +10,6 @@ Depends:
     R (>= 3.4.2)
 Encoding: UTF-8
 LazyData: TRUE
-Imports: dplyr, stringr
+Imports: 
+    tidyverse
 RoxygenNote: 6.0.1

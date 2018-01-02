@@ -20,7 +20,7 @@ data frame with:
 Get a data frame with the GDP price index, either annual or quarterly.
 }
 \examples{
-library("dplyr")
+library("tidyverse")
 getgdppi()
 getgdppi("Q")
 }

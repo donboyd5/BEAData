@@ -1,6 +1,6 @@
 
-#' @import dplyr
-NULL # applies everywhere (to all functions)
+#' @import tidyverse
+NULL
 
 
 #' Get a data frame with the GDP price index, either annual or quarterly.
@@ -14,7 +14,7 @@ NULL # applies everywhere (to all functions)
 #'
 #' @export
 #' @examples
-#' library("dplyr")
+#' library("tidyverse")
 #' getgdppi()
 #' getgdppi("Q")
 getgdppi <- function(gfreq="A"){
@@ -41,12 +41,13 @@ getgdppi <- function(gfreq="A"){
 #'
 #' @export
 #' @examples
-#' library("dplyr")
+#' library("tidyverse")
 #' getNIPATable("1.1.1")
 #' getNIPATable("3.3")
 getNIPATable <- function(gtabnum) {
   tabnum <- line <- vname <- vdesc <- tabname <- NULL # fool R CMD check
-  BEAData::NIPAvars %>% filter(tabnum==gtabnum) %>%
+  BEAData::NIPAvars %>%
+    filter(tabnum==gtabnum) %>%
     arrange(line) %>%
     select(vname, line, vdesc, tabname)
 }
@@ -71,7 +72,7 @@ getNIPATable <- function(gtabnum) {
 #'
 #' @export
 #' @examples
-#' library("dplyr")
+#' library("tidyverse")
 #' getNIPATableValue("1.1.1")
 #' getNIPATableValue("3.3")
 getNIPATableValue <- function(gtabnum) {
@@ -110,7 +111,7 @@ getNIPATableValue <- function(gtabnum) {
 #'
 #' @export
 #' @examples
-#' library("dplyr")
+#' library("tidyverse")
 #' getNIPAvarinfo("3.3", 1)
 #' getNIPAvarinfo("2.3.2", 4)
 getNIPAvarinfo <- function(gtabnum, gline){

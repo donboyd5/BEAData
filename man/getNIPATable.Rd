@@ -24,7 +24,7 @@ data frame sorted by line number, with:
 Return a NIPA table descriptive information as a data frame.
 }
 \examples{
-library("dplyr")
+library("tidyverse")
 getNIPATable("1.1.1")
 getNIPATable("3.3")
 }

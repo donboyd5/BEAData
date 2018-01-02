@@ -28,7 +28,7 @@ A one-row data frame for the variable, with:
 Get a data frame with information on a variable in a specific BEA table and line number.
 }
 \examples{
-library("dplyr")
+library("tidyverse")
 getNIPAvarinfo("3.3", 1)
 getNIPAvarinfo("2.3.2", 4)
 }

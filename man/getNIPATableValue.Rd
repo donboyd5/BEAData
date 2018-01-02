@@ -28,7 +28,7 @@ data frame sorted by line number, with:
 Return a NIPA table descriptive information as a data frame, with data for 2 latest years.
 }
 \examples{
-library("dplyr")
+library("tidyverse")
 getNIPATableValue("1.1.1")
 getNIPATableValue("3.3")
 }
