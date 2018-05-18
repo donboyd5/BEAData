@@ -18,6 +18,7 @@ NULL
 #' getgdppi()
 #' getgdppi("Q")
 getgdppi <- function(gfreq="A"){
+  requireNamespace("tidyverse", quietly = TRUE)
   vname <- freq <- date <- year <- value <- NULL # fool R CMD check
   gdppi <- BEAData::nipa %>%
     filter(vname=="A191RG", freq==gfreq) %>%
@@ -45,6 +46,7 @@ getgdppi <- function(gfreq="A"){
 #' getNIPATable("1.1.1")
 #' getNIPATable("3.3")
 getNIPATable <- function(gtabnum) {
+  requireNamespace("tidyverse", quietly = TRUE)
   tabnum <- line <- vname <- vdesc <- tabname <- NULL # fool R CMD check
   BEAData::NIPAvars %>%
     filter(tabnum==gtabnum) %>%
@@ -76,6 +78,7 @@ getNIPATable <- function(gtabnum) {
 #' getNIPATableValue("1.1.1")
 #' getNIPATableValue("3.3")
 getNIPATableValue <- function(gtabnum) {
+  requireNamespace("tidyverse", quietly = TRUE)
   tabnum <- line <- vname <- vdesc <- tabname <- freq <- year <- value <- NULL # fool R CMD check
   maxyear <- BEAData::nipa[BEAData::nipa$freq=="A", ]$year %>% max
   df <- getNIPATable(gtabnum)
@@ -115,6 +118,7 @@ getNIPATableValue <- function(gtabnum) {
 #' getNIPAvarinfo("3.3", 1)
 #' getNIPAvarinfo("2.3.2", 4)
 getNIPAvarinfo <- function(gtabnum, gline){
+  requireNamespace("tidyverse", quietly = TRUE)
   tabnum <- line <- vname <- vdesc <- tabname <- NULL # fool R CMD check
   vname <- BEAData::NIPAvars %>%
     filter(tabnum==gtabnum, line==gline) %>%
