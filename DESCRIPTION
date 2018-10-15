@@ -1,13 +1,13 @@
 Package: BEAData
 Type: Package
 Title: BEA Data Files
-Version: 0.5.0
+Version: 0.6.0
 Author: Don Boyd
 Maintainer: Don Boyd <donboyd5@gmail.com>
 Description: Selected national and state-level regional BEA data, annual and quarterly.
 License: GPL-2
 Depends:
-    R (>= 3.4.2)
+    R (>= 3.4.3)
 Encoding: UTF-8
 LazyData: TRUE
 Imports: 

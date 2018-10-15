@@ -44,7 +44,7 @@ getgdppi <- function(gfreq="A"){
 #' getgdp("Q")
 getgdp <- function(gfreq="A"){
   requireNamespace("tidyverse", quietly = TRUE)
-  vname <- freq <- date <- year <- value <- NULL # fool R CMD check
+  vname <- freq <- date <- year <- value <- A191RX <- A191RC <- A191RG <- NULL # fool R CMD check
   period <- ifelse(gfreq=="A", "year", "date")
   gdp <- BEAData::nipa %>%
     dplyr::filter(vname %in% c("A191RX", "A191RC", "A191RG"), freq==gfreq) %>% # real gdp, nominal gdp, gdp price index
@@ -52,6 +52,33 @@ getgdp <- function(gfreq="A"){
     tidyr::spread(vname, value) %>%
     dplyr::select(period, rgdp=A191RX, gdp=A191RC, gdppi=A191RG)
   return(gdp)
+}
+
+
+#' Get a data frame with a set of NIPA variables, annual or quarterly.
+#'
+#' @param vars a vector of NIPA variable names
+#' @param gfreq "A" (annual) or "Q" (quarterly). Defaults to "A".
+#' @return data frame with:
+#'
+#'    year (integer), vname, value (double), if freq=="A"
+#'
+#'    date (date), vname, value (double) if freq=="Q"
+#'
+#' @export
+#' @examples
+#' library("tidyverse")
+#' vars <- c("A191RX", "A191RG")
+#' getNIPAvars(vars, gfreq="A")
+#' getNIPAvars(vars, gfreq="Q")
+getNIPAvars <- function(vars, gfreq="A"){
+  requireNamespace("tidyverse", quietly = TRUE)
+  vname <- freq <- date <- year <- value <- NULL # fool R CMD check
+  period <- ifelse(gfreq=="A", "year", "date")
+  df <- BEAData::nipa %>%
+    dplyr::filter(vname %in% vars, freq==gfreq) %>%
+    dplyr::select(period, vname, value)
+  return(df)
 }
 
 
@@ -119,7 +146,7 @@ getNIPATableValue <- function(gtabnum) {
     tidyr::spread(year, value)
   df3 <- df %>%
     dplyr::left_join(df2) %>%
-    dplyr::select(vname, line, vdesc, starts_with("y"), tabname)
+    dplyr::select(vname, line, vdesc, dplyr::starts_with("y"), tabname)
   return(df3)
 }
 
