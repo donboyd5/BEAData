@@ -39,7 +39,7 @@ library("apitools")
 
 # CAUTION ----
 # update the description file to ensure that these packages are imported
-usethis::use_package("tidyverse")
+# usethis::use_package("tidyverse")
 # usethis::use_package("tidyr")
 # usethis::use_package("magrittr")
 # END CAUTION ----
@@ -65,6 +65,7 @@ usethis::use_package("tidyverse")
 data(package="BEAData")
 glimpse(nipa)
 count(nipa, freq)
+comment(nipa)
 
 # vname c, year i, value d, vdesc c; add tabnum.first c, tabname.first c, line i
 # tabnum is of form "1.1.1"
@@ -107,6 +108,7 @@ NIPAvars <- vars2 %>%
          tabnum=ifelse(str_sub(tabname, 1, 5)=="Table", tabnum, NA))
 glimpse(NIPAvars)
 d <- count(NIPAvars, table, tabnum, tabname)
+d %>% ht
 
 # getNIPATable <- function(gtabnum) {
 #   NIPAvars %>% filter(tabnum==gtabnum) %>%
@@ -204,9 +206,9 @@ nipa <- bind_rows(dfa2, dfq2, dfm2)
 comment(nipa) <- paste0("NIPA data all tables, Annual, quarterly, and monthly, latest item released: ", release_date)
 comment(nipa)
 glimpse(nipa)
-devtools::use_data(nipa, overwrite=TRUE)
+system.time(usethis::use_data(nipa, overwrite=TRUE)) # can take a couple of minutes
 
-devtools::use_data(NIPAvars, overwrite=TRUE)
+usethis::use_data(NIPAvars, overwrite=TRUE)
 
 
 #****************************************************************************************************
