@@ -7,11 +7,12 @@ Maintainer: Don Boyd <donboyd5@gmail.com>
 Description: Selected national and state-level regional BEA data, annual and quarterly.
 License: GPL-2
 Depends:
-    R (>= 3.4.3)
+    R (>= 3.5.0)
 Encoding: UTF-8
 LazyData: TRUE
 Imports: 
     tidyverse,
+    dplyr,
     magrittr,
     tidyr
 RoxygenNote: 6.1.1

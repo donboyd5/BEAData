@@ -206,7 +206,7 @@ comment(sgdp.a)
 
 
 #****************************************************************************************************
-#                Get state quarterly gdp data ####
+#                TODO as of 3/2/2019: Get state quarterly gdp data ####
 #****************************************************************************************************
 # save just the state data as sgdp.q - it also has summaries by region
 # starts in 2005q1
@@ -269,7 +269,7 @@ load("./data/sgdp.q.rda")
 
 
 #****************************************************************************************************
-#                DOWNLOAD state annual personal income data ####
+#                TODO as of 3/2/2019: DOWNLOAD state annual personal income data ####
 #****************************************************************************************************
 # http://www.bea.gov/regional/zip/spi.zip
 download.file("http://www.bea.gov/regional/zip/spi.zip", "./data-raw/spi.zip", mode="wb")
@@ -404,7 +404,7 @@ spi.a_all %>% filter(stabbr=="NY") %>% tail(20)
 
 
 #****************************************************************************************************
-#                Get state quarterly personal income data ####
+#                TODO as of 3/2/2019: Get state quarterly personal income data ####
 #****************************************************************************************************
 # http://www.bea.gov/regional/zip/sqpi.zip
 # save just the state data as spi.a - it also has summaries by region
