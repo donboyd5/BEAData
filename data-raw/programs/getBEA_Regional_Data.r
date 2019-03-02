@@ -269,12 +269,12 @@ load("./data/sgdp.q.rda")
 
 
 #****************************************************************************************************
-#                TODO as of 3/2/2019: DOWNLOAD state annual personal income data ####
+#                DOWNLOAD state annual personal income data ####
 #****************************************************************************************************
 # http://www.bea.gov/regional/zip/spi.zip
-download.file("http://www.bea.gov/regional/zip/spi.zip", "./data-raw/spi.zip", mode="wb")
-downloaddate <- format(Sys.time(), '%Y-%m-%d')
-unzip("./data-raw/spi.zip", list=TRUE) %>% arrange(desc(Length)) %>% head(20)
+# download.file("http://www.bea.gov/regional/zip/spi.zip", "./data-raw/spi.zip", mode="wb")
+
+# unzip("./data-raw/spi.zip", list=TRUE) %>% arrange(desc(Length)) %>% head(20)
 # tmp <- unzip("./data-raw/spi.zip", list=TRUE)
 
 
@@ -295,40 +295,68 @@ unzip("./data-raw/spi.zip", list=TRUE) %>% arrange(desc(Length)) %>% head(20)
 #****************************************************************************************************
 #                Get SA1 state annual personal income data ####
 #****************************************************************************************************
+downloaddate <- format(Sys.time(), '%Y-%m-%d')
+
+unzip("./data-raw/SAINC.zip", list=TRUE) %>% arrange(desc(Length)) %>% head(20)
+unzip("./data-raw/SAINC.zip", list=TRUE) %>% filter(str_detect(Name, "ALL_AREAS")) %>% arrange(Name)
+
+# From xml definitions files:
+# SAINC1" Name="Personal Income Summary: Personal Income, Population, Per Capita Personal Income SAINC1_1998_2017_ALL_AREAS.csv
+# SAINC4" Name="Personal Income and Employment by Major Component SAINC4_1998_2017_ALL_AREAS.csv
+# SAINC5N" Name="Personal Income by Major Component and Earnings by NAICS Industry
+# SAINC6N" Name="Compensation of Employees by NAICS Industry
+# SAINC7N" Name="Wages and Salaries by NAICS Industry
+# SAINC30" Name="Economic Profile  SAINC30_1998_2017_ALL_AREAS.csv
+# SAINC35" Name="Personal Current Transfer Receipts SAINC35_1998_2017_ALL_AREAS.csv
+# SAINC40" Name="Property Income SAINC40_1998_2017_ALL_AREAS.csv
+# SAINC45" Name="Farm Income and Expenses SAINC45_1998_2017_ALL_AREAS.csv
+# SAINC50" Name="Personal Current Taxes SAINC50_1998_2017_ALL_AREAS.csv
+# SAINC51" Name="Disposable Personal Income Summary: Disposable Personal Income, Population, and Per Capita Disposable Personal Income SAINC51_1998_2017_ALL_AREAS.csv
+
+# SAEMP27N" Name="Full-Time and Part-Time Wage and Salary Employment by NAICS Industry
+fn <- "SAINC1_1998_2017_ALL_AREAS.csv"
+
+get_spi <- function(fn, vname){
+  # GeoFIPS	GeoName	Region	TableName	LineCode	IndustryClassification	Description	Unit
+  df <- read_delim(unz("./data-raw/SAINC.zip", fn),
+                   delim=",",
+                   escape_double = FALSE,
+                   col_types = cols(GeoFIPS=col_character(),
+                                    GeoName=col_character(),
+                                    TableName=col_character(),
+                                    IndustryClassification=col_character(),
+                                    Description=col_character(),
+                                    Unit=col_character(),
+                                    .default= col_double()))
+
+  df2 <- df %>%
+    mutate(GeoFIPS=str_extract(GeoFIPS, "[0-9]+"),
+           GeoName=str_remove(GeoName, "[*]+"),
+           stabbr=stcodes$stabbr[match(GeoName, stcodes$stname)])
+
+  df3 <- df2 %>% filter(!is.na(stabbr)) %>%
+    rename(line=LineCode,
+           spiname=Description) %>%
+    filter(line==1) %>%
+    select(-GeoFIPS, -GeoName, -Region, -TableName, -line, -IndustryClassification, -Unit) %>%
+    gather(year, value, -stabbr, -spiname)
+
+  df4 <- df3 %>%
+    mutate(vname=vname,
+           year=as.integer(year),
+           value=as.numeric(value)) %>%
+    select(vname, stabbr, year, everything())
+
+  return(df4)
+}
+
+
 # save just the state data as spi.a - it also has summaries by region
-# starts in 1997
-df <- read_csv(unz("./data-raw/spi.zip", "SA1_1929_2016.csv"))
-problems(df)
-glimpse(df)
-count(df, GeoFIPS, GeoName, Region)
-count(df, IndustryClassification)
-count(df, LineCode, Description)
+spi.a <- get_spi("SAINC1_1998_2017_ALL_AREAS.csv", "spi")
+ht(spi.a)
 
-df2 <- df %>% mutate(stabbr=stcodes$stabbr[match(str_replace(GeoName, "\\*", ""), stcodes$stname)])
-count(df2, stabbr, GeoFIPS, GeoName, Region)
-
-df3 <- df2 %>% filter(!is.na(stabbr)) %>%
-  mutate(vname=ifelse(LineCode==1, "spi",
-                      ifelse(LineCode==2, "pop",
-                             ifelse(LineCode==3, "pcpi", "error")))) %>%
-  select(-GeoFIPS, -GeoName, -Region, -Table, -IndustryClassification, -LineCode, -Description) %>%
-  gather(year, value, -stabbr, -vname) %>%
-  mutate(year=as.integer(year), value=as.numeric(value)) %>%
-  filter(!is.na(value))
-glimpse(df3)
-count(df3, vname)
-
-df4 <- df3 %>% spread(vname, value) %>%
-  mutate(pop=pop / 1000, # put in thousands
-         spi=spi / 1e6) # put in billions
-glimpse(df4)
-count(df4, year) %>% ht
-count(df4, stabbr) # includes DC and US
-
-# save real and nominal gdp, all industries, and then go on and save a slim file
-spi.a <- df4
 comment(spi.a) <- paste0("State personal income ($b) and population (#k), annual, downloaded ", downloaddate)
-devtools::use_data(spi.a, overwrite=TRUE)
+usethis::use_data(spi.a, overwrite=TRUE)
 
 load("./data/spi.a.rda")
 glimpse(spi.a)
@@ -336,9 +364,8 @@ comment(spi.a)
 spi.a %>% filter(stabbr=="NY") %>% tail(20)
 
 
-
 #****************************************************************************************************
-#                Get SA4 DETAILED COMPONENTS OF state annual personal income data ####
+#                TODO as of 3/2/2019: Get SA4 DETAILED COMPONENTS OF state annual personal income data ####
 #****************************************************************************************************
 # LineCode                                                              Description     n
 # <int>                                                                    <chr> <int>
@@ -395,7 +422,7 @@ count(df3, stabbr) # includes DC and US
 spi.a_all <- df3
 downloaddate <- format(Sys.time(), '%Y-%m-%d')
 comment(spi.a_all) <- paste0("State personal income DETAILS, annual, downloaded ", downloaddate)
-devtools::use_data(spi.a_all, overwrite=TRUE)
+usethis::use_data(spi.a_all, overwrite=TRUE)
 
 load("./data/spi.a_all.rda")
 glimpse(spi.a_all)
@@ -484,7 +511,7 @@ spiw.q <- spi.q %>% select(stabbr, date, vname, value) %>%
 glimpse(spiw.q)
 comment(spiw.q) <- paste0("State personal income components and selected other variables, wide, quarterly, downloaded ",
                           downloaddate)
-devtools::use_data(spiw.q, overwrite=TRUE)
+usethis::use_data(spiw.q, overwrite=TRUE)
 
 
 load("./data/spi.q.rda")
