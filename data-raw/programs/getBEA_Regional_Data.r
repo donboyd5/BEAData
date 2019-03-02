@@ -4,6 +4,13 @@
 
 # Regional data sources
 # http://www.bea.gov/regional/downloadzip.cfm
+# https://www.bea.gov/data/economic-accounts/regional
+
+# For links to documentation see:
+#   https://apps.bea.gov/regional/quick.cfm
+
+# API
+#   https://apps.bea.gov/api/_pdf/bea_web_service_api_user_guide.pdf
 
 
 #****************************************************************************************************
@@ -53,6 +60,31 @@ dq2 <- function(qs) {
 
 # dq("1995Q3")
 
+
+#****************************************************************************************************
+#                Temporary download workarounds ####
+#****************************************************************************************************
+# Download links don't seem to work, so:
+# Go to: https://apps.bea.gov/regional/downloadzip.cfm
+#   download needed files
+#     copy to D:\Dropbox\RPrograms PC\Packages\BEAData\data-raw
+
+
+# See api info for info on file names
+# https://apps.bea.gov/regional/docs/RegionalApi.cfm
+
+# SAGDP10S__ALL_AREAS_1977_1997.csv  Per capita real GDP by state	Chained 1997 dollars
+
+# SAGDP2N	Gross domestic product (GDP) by state	Millions of current dollars SAGDP2N__ALL_AREAS_1997_2017.csv
+# SAGDP3N	Taxes on production and imports less subsidies	Thousands of dollars
+# SAGDP4N	Compensation of employees	Thousands of dollars
+# SAGDP5N	Subsidies	Thousands of dollars
+# SAGDP6N	Taxes on production and imports	Thousands of dollars
+# SAGDP7N	Gross operating surplus	Thousands of dollars
+# SAGDP8N	Quantity indexes for real GDP by state (2012=100.0)
+# SAGDP9N__ALL_AREAS_1997_2017.csv
+
+
 #****************************************************************************************************
 #                Get state annual gdp data ####
 #****************************************************************************************************
@@ -62,57 +94,67 @@ dq2 <- function(qs) {
 # save just the state data as sgdp.a - it also has summaries by region
 # starts in 1997
 
-download.file("http://www.bea.gov/regional/zip/gsp/gsp_naics_all.zip", "./data-raw/gsp_naics_all.zip", mode="wb")
+# download.file("http://www.bea.gov/regional/zip/gsp/gsp_naics_all.zip", "./data-raw/gsp_naics_all.zip", mode="wb")
 downloaddate <- format(Sys.time(), '%Y-%m-%d')
 
-unzip("./data-raw/gsp_naics_all.zip", list=TRUE)
-# unzip("./data-raw/qgsp_all.zip", exdir=str_sub(currd, 1, -2))
+# get data
+get_gdp <- function(fn, vname){
+  df <- read_delim(unz("./data-raw/SAGDP.zip", fn),
+                   delim=",",
+                   escape_double = FALSE,
+                   col_types = cols(GeoFIPS=col_character(),
+                                    GeoName=col_character(),
+                                    TableName=col_character(),
+                                    ComponentName=col_character(),
+                                    Unit=col_character(),
+                                    IndustryClassification=col_character(),
+                                    Description=col_character(),
+                                    .default= col_double()))
 
-df <- read_csv(unz("./data-raw/gsp_naics_all.zip", "gsp_naics_all.csv"))
-glimpse(df)
-count(df, GeoFIPS, GeoName, Region)
+  df2 <- df %>%
+    mutate(GeoFIPS=str_extract(GeoFIPS, "[0-9]+"),
+           GeoName=str_remove(GeoName, "[*]+"),
+           stabbr=stcodes$stabbr[match(GeoName, stcodes$stname)])
 
-df2 <- df %>% mutate(stabbr=stcodes$stabbr[match(GeoName, stcodes$stname)])
-count(df2, stabbr, GeoFIPS, GeoName, Region)
+  df3 <- df2 %>% filter(!is.na(stabbr)) %>%
+    rename(ind=IndustryId,
+           indclass=IndustryClassification,
+           indname=Description) %>%
+    select(-GeoFIPS, -GeoName, -Region, -TableName, -ComponentName, -Unit) %>%
+    gather(year, value, -stabbr, -ind, -indclass, -indname)
 
-df3 <- df2 %>% filter(!is.na(stabbr)) %>%
-  rename(component=ComponentId,
-         compname=ComponentName,
-         ind=IndustryId,
-         indclass=IndustryClassification,
-         indname=Description) %>%
-  select(-GeoFIPS, -GeoName, -Region) %>%
-  gather(year, value, -stabbr, -component, -compname, -ind, -indclass, -indname)
-glimpse(df3)
+  df4 <- df3 %>%
+    mutate(vname=vname,
+           year=as.integer(year), value=as.numeric(value)) %>%
+    select(vname, stabbr, year, everything())
 
-df4 <- df3 %>% mutate(year=as.integer(year), value=as.numeric(value)) %>%
-  select(stabbr, year, everything())
-glimpse(df4)
-count(df4, year)
-count(df4, component, compname)
-count(df4, ind, indclass, indname)
+  return(df4)
+}
+
+gdp <- get_gdp("SAGDP2N__ALL_AREAS_1997_2017.csv", "gdp")
+rgdp <- get_gdp("SAGDP9N__ALL_AREAS_1997_2017.csv", "rgdp")
+
+gdp.all <- bind_rows(gdp, rgdp)
+ht(gdp.all)
 
 
-# save real and nominal gdp, all industries, and then go on and save a slim file
-sgdp.a_all <- df4
-comment(sgdp.a_all) <- paste0("State GDP all variables, annual, downloaded ", downloaddate)
+# save gdp, all industries, and then go on and save a slim file
+sgdp.a_all <- gdp.all
+comment(sgdp.a_all) <- paste0("State GDP, nominal and real, all variables, annual, downloaded ", downloaddate)
 comment(sgdp.a_all)
-devtools::use_data(sgdp.a_all, overwrite=TRUE)
+usethis::use_data(sgdp.a_all, overwrite=TRUE)
 
 # now save slimmed down file
-df5 <- sgdp.a_all %>% filter(ind==1, component %in% c(200, 900)) %>%
-  mutate(vname=ifelse(component==200, "gdp",
-                      ifelse(component==900, "rgdp", "error"))) %>%
+dfslim <- sgdp.a_all %>% filter(ind==1) %>%
   select(stabbr, year, vname, value) %>%
   spread(vname, value)
-glimpse(df5)
+glimpse(dfslim)
 
-sgdp.a <- df5
+sgdp.a <- dfslim
 comment(sgdp.a) <- paste0("State nominal and real GDP, annual, downloaded ", downloaddate)
 comment(sgdp.a)
-devtools::use_data(sgdp.a, overwrite=TRUE)
+usethis::use_data(sgdp.a, overwrite=TRUE)
 
-rm(df, df2, df3, df4, df5)
 rm(sgdp.a, sgdp.a_all)
 
 
