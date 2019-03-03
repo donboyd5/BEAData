@@ -1,6 +1,4 @@
-# 7/15/2017 djb Need to fix state quarterly personal income and personal consumption.
-
-# Note that as of now (11/16/2016) I am using git but have not uploaded this to the github site.
+# 3/3/2019
 
 # Regional data sources
 # http://www.bea.gov/regional/downloadzip.cfm
@@ -42,7 +40,9 @@ library("bdata")
 #****************************************************************************************************
 #                Globals ####
 #****************************************************************************************************
+bdir <- "D:/Data/BEAData/" # put any manually downloaded files here
 
+rgnfiles <- c("SAGDP", "SQGDP", "SAINC", "SQINC", "SARPP", "SAEXP") # SAGDP SQGDP SAINC SQINC SARPP SAEXP
 
 
 #****************************************************************************************************
@@ -60,8 +60,33 @@ dq2 <- function(qs) {
 
 # dq("1995Q3")
 
+download.rzip <- function(rfn){
+  # download a regional zip file from https://apps.bea.gov/regional/zip
+  # names include: SAGDP SQGDP SAINC SQINC SARPP SAEXP
+  urlbase <- "https://apps.bea.gov/regional/zip/"
+  download.file(paste0(urlbase, rfn, ".zip"), paste0(bdir, rfn, ".zip"), mode="wb")
+}
+
+
+#****************************************************************************************************
+#                Download info ####
+#****************************************************************************************************
+# Go to: https://apps.bea.gov/regional/downloadzip.cfm to see available files
+# See api info for info on file names
+# https://apps.bea.gov/regional/docs/RegionalApi.cfm
+
+# Example URL:
+#   https://apps.bea.gov/regional/zip/SQGDP.zip
+#   Files are: "SAGDP" "SQGDP" "SAINC" "SQINC" "SARPP" "SAEXP"
+
+
+#****************************************************************************************************
+#                Get state annual gdp data ####
+#****************************************************************************************************
+# save just the state data as sgdp.a - it also has summaries by region; starts in 1997
 get_gdp <- function(fn, vname){
-  df <- read_delim(unz("./data-raw/SAGDP.zip", fn),
+  fullpath <- paste0(bdir, "SAGDP.zip")
+  df <- read_delim(unz(fullpath, fn),
                    delim=",",
                    escape_double = FALSE,
                    col_types = cols(GeoFIPS=col_character(),
@@ -94,13 +119,68 @@ get_gdp <- function(fn, vname){
 }
 
 
-get_pce <- function(fn, vname){
-  # GeoFIPS	GeoName	Region	TableName	ComponentName	Unit	Line	IndustryClassification	Description
-  df <- read_delim(unz("./data-raw/SAEXP.zip", fn),
+download.rzip("SAGDP")
+downloaddate <- format(Sys.time(), '%Y-%m-%d')
+
+# peek at the files as needed
+fn <- paste0(bdir, "SAGDP.zip")
+(fnames <- unzip(fn, list=TRUE) %>% filter(str_detect(Name, "ALL_AREAS")) %>% .[["Name"]] %>% sort)
+read_csv(unz(fn, fnames[4]), n_max=10) %>% select(c(1:10, ncol(.))) %>% as.data.frame
+
+# SAGDP10S__ALL_AREAS_1977_1997.csv  Per capita real GDP by state	Chained 1997 dollars
+
+# SAGDP2N	Gross domestic product (GDP) by state	Millions of current dollars SAGDP2N__ALL_AREAS_1997_2017.csv
+# SAGDP3N	Taxes on production and imports less subsidies	Thousands of dollars
+# SAGDP4N	Compensation of employees	Thousands of dollars
+# SAGDP5N	Subsidies	Thousands of dollars
+# SAGDP6N	Taxes on production and imports	Thousands of dollars
+# SAGDP7N	Gross operating surplus	Thousands of dollars
+# SAGDP8N	Quantity indexes for real GDP by state (2012=100.0)
+# SAGDP9N__ALL_AREAS_1997_2017.csv
+# end peek
+
+gdp <- get_gdp("SAGDP2N__ALL_AREAS_1997_2017.csv", "gdp")
+rgdp <- get_gdp("SAGDP9N__ALL_AREAS_1997_2017.csv", "rgdp")
+
+gdp.all <- bind_rows(gdp, rgdp)
+ht(gdp.all)
+
+# save gdp, all industries, and then go on and save a slim file
+sgdp.a_all <- gdp.all
+comment(sgdp.a_all) <- paste0("State GDP, nominal and real, all variables, annual, downloaded ", downloaddate)
+comment(sgdp.a_all)
+usethis::use_data(sgdp.a_all, overwrite=TRUE)
+
+# now save slimmed down file
+dfslim <- sgdp.a_all %>% filter(ind==1) %>%
+  select(stabbr, year, vname, value) %>%
+  spread(vname, value)
+glimpse(dfslim)
+
+sgdp.a <- dfslim
+comment(sgdp.a) <- paste0("State nominal and real GDP, annual, downloaded ", downloaddate)
+comment(sgdp.a)
+usethis::use_data(sgdp.a, overwrite=TRUE)
+
+rm(sgdp.a, sgdp.a_all)
+
+load("./data/sgdp.a.rda")
+glimpse(sgdp.a)
+comment(sgdp.a)
+
+
+#****************************************************************************************************
+#                Get state quarterly gdp data ####
+#****************************************************************************************************
+
+get_gdpq <- function(fn, vname){
+  fullpath <- paste0(bdir, "SQGDP.zip")
+  df <- read_delim(unz(fullpath, fn),
                    delim=",",
                    escape_double = FALSE,
                    col_types = cols(GeoFIPS=col_character(),
                                     GeoName=col_character(),
+                                    Region=col_double(),
                                     TableName=col_character(),
                                     ComponentName=col_character(),
                                     Unit=col_character(),
@@ -114,24 +194,77 @@ get_pce <- function(fn, vname){
            stabbr=stcodes$stabbr[match(GeoName, stcodes$stname)])
 
   df3 <- df2 %>% filter(!is.na(stabbr)) %>%
-    rename(line=Line,
-           pcename=Description) %>%
-    select(-GeoFIPS, -GeoName, -Region, -TableName, -ComponentName, -Unit, -IndustryClassification) %>%
-    gather(year, value, -stabbr, -line, -pcename)
+    rename(ind=IndustryId,
+           indclass=IndustryClassification,
+           indname=Description) %>%
+    select(-GeoFIPS, -GeoName, -Region, -TableName, -ComponentName, -Unit) %>%
+    gather(yearq, value, -stabbr, -ind, -indclass, -indname)
 
   df4 <- df3 %>%
     mutate(vname=vname,
-           year=as.integer(year), value=as.numeric(value)) %>%
-    select(vname, stabbr, year, everything())
+           date=dq2(yearq),
+           value=as.numeric(value)) %>%
+    select(vname, stabbr, date, ind, indclass, indname, value)
 
   return(df4)
 }
 
+# save just the state data as sgdp.q - it also has summaries by region
+# starts in 2005q1
+download.rzip("SQGDP")
+downloaddate <- format(Sys.time(), '%Y-%m-%d')
 
+zfn <- paste0(bdir, "SQGDP.zip")
+unzip(zfn, list=TRUE) %>% filter(str_detect(Name, "ALL_AREAS"))
+(fnames <- unzip(zfn, list=TRUE) %>% filter(str_detect(Name, "ALL_AREAS")) %>% .[["Name"]] %>% sort)
+
+# peek at the files as needed
+read_csv(unz(zfn, fnames[2]), n_max=10) %>% select(c(1:10, ncol(.))) %>% as.data.frame
+
+# SQGDP11__ALL_AREAS_2005_2018.csv Contributions to percent change in real GDP Percentage points
+# SQGDP2__ALL_AREAS_2005_2018.csv Gross domestic product (GDP) by state Millions of current dollars
+# SQGDP8__ALL_AREAS_2005_2018.csv Quantity indexes for real GDP by state (2012=100.0)
+# SQGDP9__ALL_AREAS_2005_2018.csv Real GDP by state Millions of chained 2012 dollars
+# all run from 2005:Q1 (using this date format) to latest
+# end peek
+
+ngdpq <- get_gdpq("SQGDP2__ALL_AREAS_2005_2018.csv", "gdp")
+ht(ngdpq)
+
+rgdpq <- get_gdpq("SQGDP9__ALL_AREAS_2005_2018.csv", "rgdp")
+ht(rgdpq)
+
+# save real and nominal gdp, all industries, and then go on and save a slim file
+sgdp.q_all <- bind_rows(ngdpq, rgdpq)
+comment(sgdp.q_all) <- paste0("State GDP all variables, quarterly, downloaded ", downloaddate)
+comment(sgdp.q_all)
+usethis::use_data(sgdp.q_all, overwrite=TRUE)
+
+# now save slimmed down file
+dfslim <- sgdp.q_all %>%
+  filter(ind==1,) %>%
+  select(stabbr, date, vname, value) %>%
+  spread(vname, value)
+glimpse(dfslim)
+ht(dfslim)
+
+sgdp.q <- dfslim
+comment(sgdp.q) <- paste0("State nominal and real GDP, quarterly, downloaded ", downloaddate)
+comment(sgdp.q)
+usethis::use_data(sgdp.q, overwrite=TRUE)
+
+rm(sgdp.q, sgdp.q_all)
+load("./data/sgdp.q.rda")
+
+
+#****************************************************************************************************
+#                Get SAINC1 state annual personal income data ####
+#****************************************************************************************************
 get_spi <- function(fn, vname, lines=NULL){
   # GeoFIPS	GeoName	Region	TableName	LineCode	IndustryClassification	Description	Unit
   # lines is an integer vector of which lines to keep -- NULL means ALL
-  df <- read_delim(unz("./data-raw/SAINC.zip", fn),
+  fullpath <- paste0(bdir, "SAINC.zip")
+  df <- read_delim(unz(fullpath, fn),
                    delim=",",
                    escape_double = FALSE,
                    col_types = cols(GeoFIPS=col_character(),
@@ -166,176 +299,13 @@ get_spi <- function(fn, vname, lines=NULL){
 }
 
 
-#****************************************************************************************************
-#                Temporary download workarounds ####
-#****************************************************************************************************
-# Download links don't seem to work, so:
-# Go to: https://apps.bea.gov/regional/downloadzip.cfm
-#   download needed files
-#     copy to D:\Dropbox\RPrograms PC\Packages\BEAData\data-raw
-
-
-# See api info for info on file names
-# https://apps.bea.gov/regional/docs/RegionalApi.cfm
-
-# SAGDP10S__ALL_AREAS_1977_1997.csv  Per capita real GDP by state	Chained 1997 dollars
-
-# SAGDP2N	Gross domestic product (GDP) by state	Millions of current dollars SAGDP2N__ALL_AREAS_1997_2017.csv
-# SAGDP3N	Taxes on production and imports less subsidies	Thousands of dollars
-# SAGDP4N	Compensation of employees	Thousands of dollars
-# SAGDP5N	Subsidies	Thousands of dollars
-# SAGDP6N	Taxes on production and imports	Thousands of dollars
-# SAGDP7N	Gross operating surplus	Thousands of dollars
-# SAGDP8N	Quantity indexes for real GDP by state (2012=100.0)
-# SAGDP9N__ALL_AREAS_1997_2017.csv
-
-
-#****************************************************************************************************
-#                Get state annual gdp data ####
-#****************************************************************************************************
-# sometimes BEA calls it gross state product but I believe the formal name is state gross domestic product
-# so I use gdp
-
-# save just the state data as sgdp.a - it also has summaries by region
-# starts in 1997
-
-# download.file("http://www.bea.gov/regional/zip/gsp/gsp_naics_all.zip", "./data-raw/gsp_naics_all.zip", mode="wb")
+download.rzip("SAINC")
 downloaddate <- format(Sys.time(), '%Y-%m-%d')
 
-# get data
+fn <- paste0(bdir, "SAINC.zip")
 
-gdp <- get_gdp("SAGDP2N__ALL_AREAS_1997_2017.csv", "gdp")
-rgdp <- get_gdp("SAGDP9N__ALL_AREAS_1997_2017.csv", "rgdp")
-
-gdp.all <- bind_rows(gdp, rgdp)
-ht(gdp.all)
-
-
-# save gdp, all industries, and then go on and save a slim file
-sgdp.a_all <- gdp.all
-comment(sgdp.a_all) <- paste0("State GDP, nominal and real, all variables, annual, downloaded ", downloaddate)
-comment(sgdp.a_all)
-usethis::use_data(sgdp.a_all, overwrite=TRUE)
-
-# now save slimmed down file
-dfslim <- sgdp.a_all %>% filter(ind==1) %>%
-  select(stabbr, year, vname, value) %>%
-  spread(vname, value)
-glimpse(dfslim)
-
-sgdp.a <- dfslim
-comment(sgdp.a) <- paste0("State nominal and real GDP, annual, downloaded ", downloaddate)
-comment(sgdp.a)
-usethis::use_data(sgdp.a, overwrite=TRUE)
-
-rm(sgdp.a, sgdp.a_all)
-
-
-load("./data/sgdp.a.rda")
-glimpse(sgdp.a)
-comment(sgdp.a)
-
-# load("./data/sgdp.a.rda")
-# glimpse(sgdp.a)
-
-# load("./data/sgdp.q_all.rda")
-# glimpse(sgdp.q_all)
-
-
-#****************************************************************************************************
-#                TODO as of 3/2/2019: Get state quarterly gdp data ####
-#****************************************************************************************************
-# save just the state data as sgdp.q - it also has summaries by region
-# starts in 2005q1
-# ugsp <- "http://www.bea.gov/regional/zip/gsp/qgsp_all.zip"
-# download.file(ugsp, "./data-raw/qgsp_all.zip", mode="wb")
-downloaddate <- format(Sys.time(), '%Y-%m-%d')
-
-unzip("./data-raw/qgsp_all.zip", list=TRUE)
-# unzip("./data-raw/qgsp_all.zip", exdir=str_sub(currd, 1, -2))
-
-df <- read_csv(unz("./data-raw/qgsp_all.zip", "qgsp_all.csv"))
-glimpse(df)
-count(df, GeoFIPS, GeoName, Region)
-
-df2 <- df %>% mutate(stabbr=stcodes$stabbr[match(GeoName, stcodes$stname)])
-count(df2, stabbr, GeoFIPS, GeoName, Region)
-
-df3 <- df2 %>% filter(!is.na(stabbr)) %>%
-  rename(component=ComponentId,
-         compname=ComponentName,
-         ind=IndustryId,
-         indclass=IndustryClassification,
-         indname=Description) %>%
-  select(-GeoFIPS, -GeoName, -Region) %>%
-  gather(yearq, value, -stabbr, -component, -compname, -ind, -indclass, -indname)
-glimpse(df3)
-
-# d <- df3$yearq[1:100]
-
-df4 <- df3 %>% mutate(date=dq(yearq), value=as.numeric(value)) %>%
-  select(-yearq) %>%
-  select(stabbr, date, everything())
-glimpse(df4)
-count(df4, component, compname)
-count(df4, ind, indclass, indname)
-
-# save real and nominal gdp, all industries, and then go on and save a slim file
-sgdp.q_all <- df4
-comment(sgdp.q_all) <- paste0("State GDP all variables, quarterly, downloaded ", downloaddate)
-comment(sgdp.q_all)
-devtools::use_data(sgdp.q_all, overwrite=TRUE)
-
-# now save slimmed down file
-df5 <- sgdp.q_all %>% filter(ind==1, component %in% c(200, 900)) %>%
-  mutate(vname=ifelse(component==200, "gdp",
-                      ifelse(component==900, "rgdp", "error"))) %>%
-  select(stabbr, date, vname, value) %>%
-  spread(vname, value)
-glimpse(df5)
-
-sgdp.q <- df5
-comment(sgdp.q) <- paste0("State nominal and real GDP, quarterly, downloaded ", downloaddate)
-comment(sgdp.q)
-devtools::use_data(sgdp.q, overwrite=TRUE)
-
-rm(df, df2, df3, df4, df5)
-rm(sgdp.q, sgdp.q_all)
-
-load("./data/sgdp.q.rda")
-
-
-#****************************************************************************************************
-#                DOWNLOAD state annual personal income data ####
-#****************************************************************************************************
-# http://www.bea.gov/regional/zip/spi.zip
-# download.file("http://www.bea.gov/regional/zip/spi.zip", "./data-raw/spi.zip", mode="wb")
-
-# unzip("./data-raw/spi.zip", list=TRUE) %>% arrange(desc(Length)) %>% head(20)
-# tmp <- unzip("./data-raw/spi.zip", list=TRUE)
-
-
-# Personal Income, Population, Per Capita Personal Income, Disposable Personal Income, and Per Capita Disposable Personal Income (SA1, SA51)
-# Personal Income and Employment by Major Component (SA4)
-# Personal Income by Major Component and Earnings by Industry (SA5, SA5H, SA5N)
-# Compensation of Employees by Industry (SA6, SA6N)
-# Wages and Salaries by Industry (SA7, SA7H, SA7N)
-# Total Full-Time and Part-Time Employment by Industry (SA25, SA25N)
-# Full-Time and Part-Time Wage and Salary Employment by Industry (SA27, SA27N)
-# Economic Profile (SA30)
-# Personal Current Transfer Receipts (SA35)
-# Property Income (SA40)
-# Farm Income and Expenses (SA45)
-# Personal Current Taxes (SA50)
-
-
-#****************************************************************************************************
-#                Get SAINC1 state annual personal income data ####
-#****************************************************************************************************
-downloaddate <- format(Sys.time(), '%Y-%m-%d')
-
-unzip("./data-raw/SAINC.zip", list=TRUE) %>% arrange(desc(Length)) %>% head(20)
-unzip("./data-raw/SAINC.zip", list=TRUE) %>% filter(str_detect(Name, "ALL_AREAS")) %>% arrange(Name)
+unzip(fn, list=TRUE) %>% arrange(desc(Length)) %>% head(20)
+unzip(fn, list=TRUE) %>% filter(str_detect(Name, "ALL_AREAS")) %>% arrange(Name)
 
 # From xml definitions files:
 # SAINC1" Name="Personal Income Summary: Personal Income, Population, Per Capita Personal Income SAINC1_1998_2017_ALL_AREAS.csv
@@ -394,7 +364,6 @@ spi.a %>% filter(stabbr=="NY") %>% tail(20)
 # 22     7020                                               Wage and salary employment    60
 # 23     7040                                                   Proprietors employment    60
 
-downloaddate <- format(Sys.time(), '%Y-%m-%d')
 spi.a_all <- get_spi("SAINC4_1998_2017_ALL_AREAS.csv", "spi")
 ht(spi.a_all)
 count(spi.a_all, line, spiname)
@@ -408,42 +377,73 @@ spi.a_all %>% filter(stabbr=="NY") %>% tail(20)
 
 
 #****************************************************************************************************
-#                TODO as of 3/2/2019: Get state quarterly personal income data ####
+#                Get state quarterly personal income data ####
 #****************************************************************************************************
-# http://www.bea.gov/regional/zip/sqpi.zip
-# save just the state data as spi.a - it also has summaries by region
-# starts in 1997
+fn <- "SQINC1__ALL_AREAS_1998_2018.csv"
+vname <- "spi"
+get_spiq <- function(fn, vname){
+  fullpath <- paste0(bdir, "SQINC.zip")
+  df <- read_delim(unz(fullpath, fn),
+                   delim=",",
+                   escape_double = FALSE,
+                   col_types = cols(GeoFIPS=col_character(),
+                                    GeoName=col_character(),
+                                    Region=col_double(),
+                                    TableName=col_character(),
+                                    LineCode=col_integer(),
+                                    IndustryClassification=col_character(),
+                                    Description=col_character(),
+                                    Unit=col_character(),
+                                    .default= col_double()))
 
-download.file("http://www.bea.gov/regional/zip/sqpi.zip", "./data-raw/sqpi.zip", mode="wb")
-unzip("./data-raw/sqpi.zip", list=TRUE) %>% arrange(desc(Length)) %>% head(20)
-# unzip("./data-raw/sqpi.zip", exdir=str_sub(currd, 1, -2))
-# file names can change - pick the correct SQ4 name
+  df2 <- df %>%
+    mutate(GeoFIPS=str_extract(GeoFIPS, "[0-9]+"),
+           GeoName=str_remove(GeoName, "[*]+"),
+           stabbr=stcodes$stabbr[match(GeoName, stcodes$stname)])
 
-df <- read_csv(unz("./data-raw/sqpi.zip", "SQ4_1948_2017__ALL_AREAS.csv"))
-problems(df)
-glimpse(df)
-count(df, GeoFIPS, GeoName, Region) %>% as.data.frame
-count(df, IndustryClassification) # all are ...
-count(df, LineCode, Description)
+  df3 <- df2 %>%
+    filter(!is.na(stabbr)) %>%
+    rename(line=LineCode,
+           description=Description) %>%
+    select(-GeoFIPS, -GeoName, -Region, -TableName, -IndustryClassification, -Unit) %>%
+    gather(yearq, value, -stabbr, -description, -line) %>%
+    filter(!is.na(value)) # a lot of missing data in early years
+
+  df4 <- df3 %>%
+    mutate(vname=vname,
+           date=dq2(yearq),
+           value=as.numeric(value)) %>%
+    select(vname, stabbr, date, line, description, value)
+
+  return(df4)
+}
 
 
-# df2 <- df %>% mutate(stabbr=stcodes$stabbr[match(str_replace(GeoName, "\\*", ""), stcodes$stname)])
-df2 <- df %>% mutate(stabbr=stcodes$stabbr[match(str_sub(GeoFIPS, 1, 2), stcodes$stfips)])
-count(df2, stabbr, GeoFIPS, GeoName, Region)
+# save just the state data as sgdp.q - it also has summaries by region
+# starts in 2005q1
+download.rzip("SQINC")
+downloaddate <- format(Sys.time(), '%Y-%m-%d')
 
-df3 <- df2 %>% filter(!is.na(stabbr)) %>%
-  rename(line=LineCode,
-         description=Description) %>%
-  select(-GeoFIPS, -GeoName, -Region, -Table, -IndustryClassification) %>%
-  gather(yearq, value, -stabbr, -line, -description) %>%
-  mutate(value=as.numeric(value)) %>%
-  filter(!is.na(value)) %>%
-  mutate(date=dq2(yearq))
+zfn <- paste0(bdir, "SQINC.zip")
+unzip(zfn, list=TRUE) %>% filter(str_detect(Name, "ALL_AREAS"))
+(fnames <- unzip(zfn, list=TRUE) %>% filter(str_detect(Name, "ALL_AREAS")) %>% .[["Name"]] %>% sort)
 
-glimpse(df3)
-count(df3, yearq, date)
-count(df3, line, description)
-count(df3, stabbr) # includes DC and US
+# peek at the files as needed
+read_csv(unz(zfn, fnames[1]), n_max=10) %>% select(c(1:9, ncol(.))) %>% as.data.frame
+
+# Files guess based on annual files
+# SQINC1" Name="Personal Income Summary: Personal Income, Population, Per Capita Personal Income SQINC1__ALL_AREAS_1998_2018.csv
+# SQINC35" Name="Personal Current Transfer Receipts SQINC35_1998_2018_ALL_AREAS.csv
+# SQINC4" Name="Personal Income and Employment by Major Component SQINC4__ALL_AREAS_1998_2018.csv
+# SQINC5N" Name="Personal Income by Major Component and Earnings by NAICS Industry SQINC5N__ALL_AREAS_1998_2018.csv
+# SQINC6N" Name="Compensation of Employees by NAICS Industry SQINC6N__ALL_AREAS_1998_2018.csv
+# SQINC7N" Name="Wages and Salaries by NAICS Industry SQINC7N__ALL_AREAS_1998_2018.csv
+# all run from 1998:Q1 (using this date format) to latest
+# end peek
+
+df <- get_spiq("SQINC4__ALL_AREAS_1998_2018.csv", "spi")
+ht(df)
+count(df, line, description)
 
 # add vnames
 vnames <- read_csv("line, vname
@@ -467,21 +467,20 @@ vnames <- read_csv("line, vname
 70, propinc
 71, farmprop.inc
 72, nonfarm.propinc")
-vnames %>% left_join(count(df3, line, description))
+vnames %>% left_join(count(df, line, description))
 
-
-df4 <- df3 %>% left_join(vnames) %>%
+df2 <- df %>%
+  select(-vname) %>%
+  left_join(vnames) %>%
   select(stabbr, date, line, vname, description, value)
-glimpse(df4)
+glimpse(df2)
 
-df4 %>% select(stabbr, date, vname, value) %>% spread(vname, value)
+df2 %>% select(stabbr, date, vname, value) %>% spread(vname, value)
 
 # save
-downloaddate <- format(Sys.time(), '%Y-%m-%d')
-
-spi.q <- df4
+spi.q <- df2
 comment(spi.q) <- paste0("State personal income components and selected other variables, quarterly, downloaded ", downloaddate)
-devtools::use_data(spi.q, overwrite=TRUE)
+usethis::use_data(spi.q, overwrite=TRUE)
 
 spiw.q <- spi.q %>% select(stabbr, date, vname, value) %>%
   spread(vname, value)
@@ -500,22 +499,55 @@ spi.q %>% filter(stabbr=="NY") %>% tail(20)
 #****************************************************************************************************
 #                Get state annual personal consumption expenditure data ####
 #****************************************************************************************************
-# http://www.bea.gov/regional/zip/PCEbyState.zip
-# save just the state data as spi.a - it also has summaries by region
-# starts in 1997
+get_pce <- function(fn, vname){
+  # GeoFIPS	GeoName	Region	TableName	ComponentName	Unit	Line	IndustryClassification	Description
+  fullpath <- paste0(bdir, "SAEXP.zip")
+  df <- read_delim(unz(fullpath, fn),
+                   delim=",",
+                   escape_double = FALSE,
+                   col_types = cols(GeoFIPS=col_character(),
+                                    GeoName=col_character(),
+                                    TableName=col_character(),
+                                    ComponentName=col_character(),
+                                    Unit=col_character(),
+                                    IndustryClassification=col_character(),
+                                    Description=col_character(),
+                                    .default= col_double()))
 
-# download.file("http://www.bea.gov/regional/zip/PCEbyState.zip", "./data-raw/PCEbyState.zip", mode="wb")
-unzip("./data-raw/SAEXP.zip", list=TRUE) %>% arrange(desc(Length)) %>% head(20)
+  df2 <- df %>%
+    mutate(GeoFIPS=str_extract(GeoFIPS, "[0-9]+"),
+           GeoName=str_remove(GeoName, "[*]+"),
+           stabbr=stcodes$stabbr[match(GeoName, stcodes$stname)])
+
+  df3 <- df2 %>% filter(!is.na(stabbr)) %>%
+    rename(line=Line,
+           pcename=Description) %>%
+    select(-GeoFIPS, -GeoName, -Region, -TableName, -ComponentName, -Unit, -IndustryClassification) %>%
+    gather(year, value, -stabbr, -line, -pcename)
+
+  df4 <- df3 %>%
+    mutate(vname=vname,
+           year=as.integer(year), value=as.numeric(value)) %>%
+    select(vname, stabbr, year, everything())
+
+  return(df4)
+}
+
+
+# http://www.bea.gov/regional/zip/PCEbyState.zip
+download.rzip("SAEXP")
 downloaddate <- format(Sys.time(), '%Y-%m-%d')
+
+fn <- paste0(bdir, "SAEXP.zip")
+
+unzip(fn, list=TRUE) %>% filter(str_detect(Name, "ALL_AREAS")) %>% arrange(desc(Length))
 
 # SAEXP1_1997_2017_ALL_AREAS_.csv  Total personal consumption expenditures (PCE) by state	Millions of current dollars
 # SAEXP2_1997_2017_ALL_AREAS_.csv SAEXP2	Per capita personal consumption expenditures (PCE) by state	Dollars
 
-pce <- get_pce("SAEXP1_1997_2017_ALL_AREAS_.csv", "pce")
-glimpse(pce)
-ht(pce)
-
-spce.a <- pce
+spce.a <- get_pce("SAEXP1_1997_2017_ALL_AREAS_.csv", "pce")
+glimpse(spce.a)
+ht(spce.a)
 
 comment(spce.a) <- paste0("State personal consumption expenditures ($m), annual, downloaded ", downloaddate)
 usethis::use_data(spce.a, overwrite=TRUE)
