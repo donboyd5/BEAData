@@ -118,6 +118,7 @@ d %>% ht
 getNIPATable("1.1.1")
 getNIPATable("1.1.5") # nominal gdp
 getNIPATable("3.3")
+tmp <- getNIPATable("7.24")
 
 tmp <- getNIPATable("3.3")
 glimpse(tmp)
@@ -133,6 +134,10 @@ tmp %>% select(-tabname)
 # }
 getNIPAvarinfo("3.3", 1)
 getNIPAvarinfo("2.3.2", 4)
+
+getNIPAvarinfo("7.24", 11)
+getNIPAvarinfo("7.24", 18)
+getNIPAvarinfo("7.24", 15)
 
 count(NIPAvars, table)
 count(NIPAvars, table) %>% filter(str_sub(table, 1, 1)=="T") %>% ht
@@ -158,6 +163,8 @@ dfa2 <- dfa %>%
 glimpse(dfa2)
 ht(dfa2)
 anyDuplicated(dfa2)
+# dfa2 %>% filter(vname=="Y313RC")  %>% tail
+# dfa2 %>% filter(vname=="Y315RC")  %>% tail
 
 #..Get quarterly data ----
 dfq <- read_csv(unz(b.file, "nipadataQ.txt"))
