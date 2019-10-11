@@ -139,8 +139,8 @@ read_csv(unz(fn, fnames[4]), n_max=10) %>% select(c(1:10, ncol(.))) %>% as.data.
 # SAGDP9N__ALL_AREAS_1997_2017.csv
 # end peek
 
-gdp <- get_gdp("SAGDP2N__ALL_AREAS_1997_2017.csv", "gdp")
-rgdp <- get_gdp("SAGDP9N__ALL_AREAS_1997_2017.csv", "rgdp")
+gdp <- get_gdp("SAGDP2N__ALL_AREAS_1997_2018.csv", "gdp")
+rgdp <- get_gdp("SAGDP9N__ALL_AREAS_1997_2018.csv", "rgdp")
 
 gdp.all <- bind_rows(gdp, rgdp)
 ht(gdp.all)
@@ -228,10 +228,10 @@ read_csv(unz(zfn, fnames[2]), n_max=10) %>% select(c(1:10, ncol(.))) %>% as.data
 # all run from 2005:Q1 (using this date format) to latest
 # end peek
 
-ngdpq <- get_gdpq("SQGDP2__ALL_AREAS_2005_2018.csv", "gdp")
+ngdpq <- get_gdpq("SQGDP2__ALL_AREAS_2005_2019.csv", "gdp")
 ht(ngdpq)
 
-rgdpq <- get_gdpq("SQGDP9__ALL_AREAS_2005_2018.csv", "rgdp")
+rgdpq <- get_gdpq("SQGDP9__ALL_AREAS_2005_2019.csv", "rgdp")
 ht(rgdpq)
 
 # save real and nominal gdp, all industries, and then go on and save a slim file
@@ -323,7 +323,8 @@ unzip(fn, list=TRUE) %>% filter(str_detect(Name, "ALL_AREAS")) %>% arrange(Name)
 # SAEMP27N" Name="Full-Time and Part-Time Wage and Salary Employment by NAICS Industry
 
 # save just the state data as spi.a - it also has summaries by region
-spi.a <- get_spi("SAINC1_1998_2017_ALL_AREAS.csv", "spi", lines=NULL)
+spi.a <- get_spi("SAINC1_1998_2018_ALL_AREAS.csv", "spi", lines=NULL)
+# spi.a <- get_spi("SAINC1__ALL_AREAS_1929_2018.csv", "spi", lines=NULL)
 ht(spi.a)
 
 comment(spi.a) <- paste0("State personal income ($m), population (#), pci ($), annual, downloaded ", downloaddate)
