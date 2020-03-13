@@ -4,13 +4,15 @@
 \name{sgdp.a}
 \alias{sgdp.a}
 \title{BEA Regional GDP data, annual.}
-\format{Data frame with 1 row per year.
+\format{
+Data frame with 1 row per year.
 \describe{
 \item{stabbr}{state abbreviation, factor}
 \item{year}{Calendar year, integer}
 \item{gdp}{Nominal gdp, numeric}
 \item{rgdp}{Real gdp, numeric}
-}}
+}
+}
 \source{
 Bureau of Economic Analysis
 }

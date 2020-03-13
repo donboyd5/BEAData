@@ -1,4 +1,9 @@
 
+# alt-o, shift-alt-o
+# alt-l, shift-alt-l
+# alt-r
+
+
 library("devtools")
 library("usethis")
 use_pipe()

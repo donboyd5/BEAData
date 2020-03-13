@@ -4,7 +4,8 @@
 \name{sgdp.q_all}
 \alias{sgdp.q_all}
 \title{BEA Regional GDP data all components, quarterly.}
-\format{Data frame with 1 row per industry per component per quarter.
+\format{
+Data frame with 1 row per industry per component per quarter.
 \describe{
 \item{stabbr}{state abbreviation, factor}
 \item{date}{First day of quarter, date}
@@ -14,7 +15,8 @@
 \item{indclass}{BEA industry classification, character}
 \item{indname}{BEA industry name, character}
 \item{value}{Amount, numeric}
-}}
+}
+}
 \source{
 Bureau of Economic Analysis
 }

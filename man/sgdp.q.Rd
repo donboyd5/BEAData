@@ -4,13 +4,15 @@
 \name{sgdp.q}
 \alias{sgdp.q}
 \title{BEA Regional GDP data, quarterly.}
-\format{Data frame with 1 row per quarter.
+\format{
+Data frame with 1 row per quarter.
 \describe{
 \item{stabbr}{state abbreviation, factor}
 \item{date}{First day of quarter, date}
 \item{gdp}{Nominal gdp, numeric}
 \item{rgdp}{Real gdp, numeric}
-}}
+}
+}
 \source{
 Bureau of Economic Analysis
 }

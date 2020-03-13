@@ -1,4 +1,4 @@
-# 3/3/2019
+# 1/14/2020
 
 # Regional data sources
 # http://www.bea.gov/regional/downloadzip.cfm
@@ -172,7 +172,8 @@ comment(sgdp.a)
 #****************************************************************************************************
 #                Get state quarterly gdp data ####
 #****************************************************************************************************
-
+# GeoFIPS,GeoName,Region,TableName,LineCode,IndustryClassification,Description,Unit 2
+# GeoFIPS,GeoName,Region,TableName,LineCode,IndustryClassification,Description,Unit 9
 get_gdpq <- function(fn, vname){
   fullpath <- paste0(bdir, "SQGDP.zip")
   df <- read_delim(unz(fullpath, fn),
@@ -209,6 +210,47 @@ get_gdpq <- function(fn, vname){
   return(df4)
 }
 
+
+get_gdpq2 <- function(fn, vname){
+  # GeoFIPS,GeoName,Region,TableName,LineCode,IndustryClassification,Description,Unit 2
+  # GeoFIPS,GeoName,Region,TableName,LineCode,IndustryClassification,Description,Unit 9
+  # fn <- "SQGDP2__ALL_AREAS_2005_2019.csv"
+  fullpath <- paste0(bdir, "SQGDP.zip")
+  df <- read_delim(unz(fullpath, fn),
+                   delim=",",
+                   escape_double = FALSE,
+                   col_types = cols(GeoFIPS=col_character(),
+                                    GeoName=col_character(),
+                                    Region=col_double(),
+                                    TableName=col_character(),
+                                    LineCode=col_integer(),
+                                    Unit=col_character(),
+                                    IndustryClassification=col_character(),
+                                    Description=col_character(),
+                                    .default= col_double()))
+
+  df2 <- df %>%
+    mutate(GeoFIPS=str_extract(GeoFIPS, "[0-9]+"),
+           GeoName=str_remove(GeoName, "[*]+"),
+           stabbr=stcodes$stabbr[match(GeoName, stcodes$stname)])
+
+  df3 <- df2 %>% filter(!is.na(stabbr)) %>%
+    rename(line=LineCode,
+           indclass=IndustryClassification,
+           indname=Description) %>%
+    select(stabbr, line, indclass, indname, contains(":")) %>%
+    gather(yearq, value, -stabbr, -line, -indclass, -indname)
+
+  df4 <- df3 %>%
+    mutate(vname=vname,
+           date=dq2(yearq),
+           value=as.numeric(value)) %>%
+    select(vname, stabbr, date, line, indclass, indname, value)
+
+  return(df4)
+}
+
+
 # save just the state data as sgdp.q - it also has summaries by region
 # starts in 2005q1
 download.rzip("SQGDP")
@@ -228,10 +270,10 @@ read_csv(unz(zfn, fnames[2]), n_max=10) %>% select(c(1:10, ncol(.))) %>% as.data
 # all run from 2005:Q1 (using this date format) to latest
 # end peek
 
-ngdpq <- get_gdpq("SQGDP2__ALL_AREAS_2005_2019.csv", "gdp")
+ngdpq <- get_gdpq2("SQGDP2__ALL_AREAS_2005_2019.csv", "gdp")
 ht(ngdpq)
 
-rgdpq <- get_gdpq("SQGDP9__ALL_AREAS_2005_2019.csv", "rgdp")
+rgdpq <- get_gdpq2("SQGDP9__ALL_AREAS_2005_2019.csv", "rgdp")
 ht(rgdpq)
 
 # save real and nominal gdp, all industries, and then go on and save a slim file
@@ -242,7 +284,7 @@ usethis::use_data(sgdp.q_all, overwrite=TRUE)
 
 # now save slimmed down file
 dfslim <- sgdp.q_all %>%
-  filter(ind==1,) %>%
+  filter(line==1,) %>%
   select(stabbr, date, vname, value) %>%
   spread(vname, value)
 glimpse(dfslim)

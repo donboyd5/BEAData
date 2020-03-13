@@ -4,7 +4,8 @@
 \name{nipa}
 \alias{nipa}
 \title{National Income and Products Accounts, annual, quarterly, and monthly, all data.}
-\format{Data frame with 1 row per variable per date.
+\format{
+Data frame with 1 row per variable per date.
 \describe{
 \item{vname}{BEA variable name; character}
 \item{date}{first day of year (annual), first day of quarter (quarterly), first day of month (monthly); date}
@@ -12,7 +13,8 @@
 \item{freq}{frequency: A, Q, or M; character}
 \item{value}{Units depend upon the table in question, numeric}
 \item{vdesc}{Variable description, character}
-}}
+}
+}
 \source{
 Bureau of Economic Analysis
 }

@@ -3,7 +3,6 @@
 \docType{package}
 \name{BEAData}
 \alias{BEAData}
-\alias{BEAData-package}
 \title{Data from the U.S. Bureau of Economic Analysis (BEA).}
 \description{
 Includes key national and state-level regional BEA data, annual and quarterly.

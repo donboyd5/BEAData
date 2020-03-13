@@ -4,7 +4,8 @@
 \name{spi.q}
 \alias{spi.q}
 \title{BEA Regional state personal income data, quarterly.}
-\format{Data frame with 1 row per quarter, per state, per variable.
+\format{
+Data frame with 1 row per quarter, per state, per variable.
 \describe{
 \item{stabbr}{state abbreviation, factor}
 \item{date}{First day of quarter, date}
@@ -12,7 +13,8 @@
 \item{vname}{Short variable name I created, character}
 \item{description}{BEA description associated with the line number, character}
 \item{value}{Value, numeric}
-}}
+}
+}
 \source{
 Bureau of Economic Analysis
 }

@@ -4,7 +4,8 @@
 \name{NIPAvars}
 \alias{NIPAvars}
 \title{Information on variables in the National Income and Products Accounts.}
-\format{Data frame with 1 row per variable per BEA table entry
+\format{
+Data frame with 1 row per variable per BEA table entry
 \describe{
 \item{vname}{BEA variable name; character}
 \item{vdesc}{Variable description, character}
@@ -12,7 +13,8 @@
 \item{line}{line number, integer}
 \item{tabname}{BEA full table name, character}
 \item{tabnum}{BEA table number, character}
-}}
+}
+}
 \source{
 Based on data from Bureau of Economic Analysis
 }
