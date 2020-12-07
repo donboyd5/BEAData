@@ -14,26 +14,26 @@
 #****************************************************************************************************
 #                Libraries ####
 #****************************************************************************************************
-library("magrittr")
-library("plyr") # needed for ldply; must be loaded BEFORE dplyr
-library("tidyverse")
+library(magrittr)
+library(plyr) # needed for ldply; must be loaded BEFORE dplyr
+library(tidyverse)
 options(tibble.print_max = 70, tibble.print_min = 70) # if more than x rows, print x - enough for states
 # ggplot2 tibble tidyr readr purrr dplyr
 
-library("hms") # hms, for times.
-library("stringr") # stringr, for strings.
-library("lubridate") # lubridate, for date/times.
-library("forcats") # forcats, for factors.
-library("readxl") # readxl, for .xls and .xlsx files.
-library("haven") # haven, for SPSS, SAS and Stata files.
+library(hms) # hms, for times.
+library(stringr) # stringr, for strings.
+library(lubridate) # lubridate, for date/times.
+library(forcats) # forcats, for factors.
+library(readxl) # readxl, for .xls and .xlsx files.
+library(haven) # haven, for SPSS, SAS and Stata files.
 
-library("grDevices")
-library("knitr")
+library(grDevices)
+library(knitr)
 
-library("zoo") # for rollapply
+library(zoo) # for rollapply
 
-library("btools") # library that I created (install from github)
-library("bdata")
+library(btools) # library that I created (install from github)
+library(bdata)
 
 
 
@@ -84,17 +84,21 @@ download.rzip <- function(rfn){
 #                Get state annual gdp data ####
 #****************************************************************************************************
 # save just the state data as sgdp.a - it also has summaries by region; starts in 1997
-get_gdp <- function(fn, vname){
+fn <- "SAGDP2N__ALL_AREAS_1997_2019.csv"
+vname <- "gdp"
+
+get_gdp2 <- function(fn, vname){
+  # new format in 2020?
   fullpath <- paste0(bdir, "SAGDP.zip")
   df <- read_delim(unz(fullpath, fn),
                    delim=",",
                    escape_double = FALSE,
                    col_types = cols(GeoFIPS=col_character(),
                                     GeoName=col_character(),
-                                    TableName=col_character(),
-                                    ComponentName=col_character(),
-                                    Unit=col_character(),
                                     IndustryClassification=col_character(),
+                                    Region=col_character(),
+                                    TableName=col_character(),
+                                    Unit=col_character(),
                                     Description=col_character(),
                                     .default= col_double()))
 
@@ -104,11 +108,11 @@ get_gdp <- function(fn, vname){
            stabbr=stcodes$stabbr[match(GeoName, stcodes$stname)])
 
   df3 <- df2 %>% filter(!is.na(stabbr)) %>%
-    rename(ind=IndustryId,
+    rename(line=LineCode,
            indclass=IndustryClassification,
            indname=Description) %>%
-    select(-GeoFIPS, -GeoName, -Region, -TableName, -ComponentName, -Unit) %>%
-    gather(year, value, -stabbr, -ind, -indclass, -indname)
+    select(-GeoFIPS, -GeoName, -Region, -TableName, -Unit) %>%
+    gather(year, value, -stabbr, -line, -indclass, -indname)
 
   df4 <- df3 %>%
     mutate(vname=vname,
@@ -117,6 +121,41 @@ get_gdp <- function(fn, vname){
 
   return(df4)
 }
+
+
+# get_gdp <- function(fn, vname){
+#   fullpath <- paste0(bdir, "SAGDP.zip")
+#   df <- read_delim(unz(fullpath, fn),
+#                    delim=",",
+#                    escape_double = FALSE,
+#                    col_types = cols(GeoFIPS=col_character(),
+#                                     GeoName=col_character(),
+#                                     TableName=col_character(),
+#                                     ComponentName=col_character(),
+#                                     Unit=col_character(),
+#                                     IndustryClassification=col_character(),
+#                                     Description=col_character(),
+#                                     .default= col_double()))
+#
+#   df2 <- df %>%
+#     mutate(GeoFIPS=str_extract(GeoFIPS, "[0-9]+"),
+#            GeoName=str_remove(GeoName, "[*]+"),
+#            stabbr=stcodes$stabbr[match(GeoName, stcodes$stname)])
+#
+#   df3 <- df2 %>% filter(!is.na(stabbr)) %>%
+#     rename(ind=IndustryId,
+#            indclass=IndustryClassification,
+#            indname=Description) %>%
+#     select(-GeoFIPS, -GeoName, -Region, -TableName, -ComponentName, -Unit) %>%
+#     gather(year, value, -stabbr, -ind, -indclass, -indname)
+#
+#   df4 <- df3 %>%
+#     mutate(vname=vname,
+#            year=as.integer(year), value=as.numeric(value)) %>%
+#     select(vname, stabbr, year, everything())
+#
+#   return(df4)
+# }
 
 
 download.rzip("SAGDP")
@@ -139,8 +178,8 @@ read_csv(unz(fn, fnames[4]), n_max=10) %>% select(c(1:10, ncol(.))) %>% as.data.
 # SAGDP9N__ALL_AREAS_1997_2017.csv
 # end peek
 
-gdp <- get_gdp("SAGDP2N__ALL_AREAS_1997_2018.csv", "gdp")
-rgdp <- get_gdp("SAGDP9N__ALL_AREAS_1997_2018.csv", "rgdp")
+gdp <- get_gdp2("SAGDP2N__ALL_AREAS_1997_2019.csv", "gdp")
+rgdp <- get_gdp2("SAGDP9N__ALL_AREAS_1997_2019.csv", "rgdp")
 
 gdp.all <- bind_rows(gdp, rgdp)
 ht(gdp.all)
@@ -152,7 +191,7 @@ comment(sgdp.a_all)
 usethis::use_data(sgdp.a_all, overwrite=TRUE)
 
 # now save slimmed down file
-dfslim <- sgdp.a_all %>% filter(ind==1) %>%
+dfslim <- sgdp.a_all %>% filter(line==1) %>%
   select(stabbr, year, vname, value) %>%
   spread(vname, value)
 glimpse(dfslim)
@@ -270,10 +309,10 @@ read_csv(unz(zfn, fnames[2]), n_max=10) %>% select(c(1:10, ncol(.))) %>% as.data
 # all run from 2005:Q1 (using this date format) to latest
 # end peek
 
-ngdpq <- get_gdpq2("SQGDP2__ALL_AREAS_2005_2019.csv", "gdp")
+ngdpq <- get_gdpq2("SQGDP2__ALL_AREAS_2005_2020.csv", "gdp")
 ht(ngdpq)
 
-rgdpq <- get_gdpq2("SQGDP9__ALL_AREAS_2005_2019.csv", "rgdp")
+rgdpq <- get_gdpq2("SQGDP9__ALL_AREAS_2005_2020.csv", "rgdp")
 ht(rgdpq)
 
 # save real and nominal gdp, all industries, and then go on and save a slim file
@@ -542,8 +581,15 @@ spi.q %>% filter(stabbr=="NY") %>% tail(20)
 #****************************************************************************************************
 #                Get state annual personal consumption expenditure data ####
 #****************************************************************************************************
+# https://apps.bea.gov/regional/zip/SQGDP.zip
+# D:\Data\BEAData\SAEXP.zip
+# con <- unz(fullpath, fn)
+# isOpen(con, rw = "")
+# isIncomplete(con)
+# GeoFIPS,GeoName,Region,TableName,LineCode,IndustryClassification,Description,Unit,1997
+
 get_pce <- function(fn, vname){
-  # GeoFIPS	GeoName	Region	TableName	ComponentName	Unit	Line	IndustryClassification	Description
+  # GeoFIPS,GeoName,Region,TableName,LineCode,IndustryClassification,Description,Unit,1997
   fullpath <- paste0(bdir, "SAEXP.zip")
   df <- read_delim(unz(fullpath, fn),
                    delim=",",
@@ -551,7 +597,6 @@ get_pce <- function(fn, vname){
                    col_types = cols(GeoFIPS=col_character(),
                                     GeoName=col_character(),
                                     TableName=col_character(),
-                                    ComponentName=col_character(),
                                     Unit=col_character(),
                                     IndustryClassification=col_character(),
                                     Description=col_character(),
@@ -563,10 +608,11 @@ get_pce <- function(fn, vname){
            stabbr=stcodes$stabbr[match(GeoName, stcodes$stname)])
 
   df3 <- df2 %>% filter(!is.na(stabbr)) %>%
-    rename(line=Line,
+    rename(line=LineCode,
            pcename=Description) %>%
-    select(-GeoFIPS, -GeoName, -Region, -TableName, -ComponentName, -Unit, -IndustryClassification) %>%
-    gather(year, value, -stabbr, -line, -pcename)
+    select(-c(GeoFIPS, GeoName, Region, TableName, Unit, IndustryClassification)) %>%
+    pivot_longer(cols=-c(stabbr, line, pcename), names_to = "year")
+    # gather(year, value, -stabbr, -line, -pcename)
 
   df4 <- df3 %>%
     mutate(vname=vname,
@@ -581,14 +627,19 @@ get_pce <- function(fn, vname){
 download.rzip("SAEXP")
 downloaddate <- format(Sys.time(), '%Y-%m-%d')
 
+vname <- "pce"
 fn <- paste0(bdir, "SAEXP.zip")
-
 unzip(fn, list=TRUE) %>% filter(str_detect(Name, "ALL_AREAS")) %>% arrange(desc(Length))
 
 # SAEXP1_1997_2017_ALL_AREAS_.csv  Total personal consumption expenditures (PCE) by state	Millions of current dollars
 # SAEXP2_1997_2017_ALL_AREAS_.csv SAEXP2	Per capita personal consumption expenditures (PCE) by state	Dollars
 
-spce.a <- get_pce("SAEXP1_1997_2017_ALL_AREAS_.csv", "pce")
+# SAEXP1__ALL_AREAS_1997_2019.csv 404614 2020-09-16 12:28:00
+# SAEXP2__ALL_AREAS_1997_2019.csv 287211 2020-09-16 12:28:00
+
+# spce.a <- get_pce("SAEXP1_1997_2017_ALL_AREAS_.csv", "pce")
+fn <- "SAEXP1__ALL_AREAS_1997_2019.csv"
+spce.a <- get_pce(fn, "pce")
 glimpse(spce.a)
 ht(spce.a)
 
