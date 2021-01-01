@@ -81,7 +81,7 @@ download.rzip <- function(rfn){
 
 
 #****************************************************************************************************
-#                Get state annual gdp data ####
+#                Get state annual gdp data on NAICS basis ####
 #****************************************************************************************************
 # save just the state data as sgdp.a - it also has summaries by region; starts in 1997
 fn <- "SAGDP2N__ALL_AREAS_1997_2019.csv"
@@ -209,7 +209,115 @@ comment(sgdp.a)
 
 
 #****************************************************************************************************
-#                Get state quarterly gdp data ####
+#                Get state annual GDP on SIC basis ####
+#****************************************************************************************************
+summary(sgdp.a)  # 1997-2019
+# get the SIC-basis data
+# urlbase <- "https://apps.bea.gov/regional/zip/"
+# SAGDP_SIC.zip
+# SAGDP2S Millions of current dollars
+# SAGDP9S Millions of chained 1997 dollars
+# download.file(paste0(urlbase, rfn, ".zip"), paste0(bdir, rfn, ".zip"), mode="wb")
+
+download.rzip("SAGDP_SIC")
+
+fn <- paste0(bdir, "SAGDP_SIC.zip")
+(fnames <- unzip(fn, list=TRUE) %>% filter(str_detect(Name, "ALL_AREAS")) %>% .[["Name"]] %>% sort)
+
+read_csv(unz(fn, fnames[1]), n_max=10) %>% select(c(1:10, ncol(.))) %>% as.data.frame # nominal gdp $ millions
+read_csv(unz(fn, fnames[8]), n_max=10) %>% select(c(1:10, ncol(.))) %>% as.data.frame # real gdp $ millions chained 1997
+
+dfnom <- read_csv(unz(fn, fnames[1])) # $ millions
+dfreal <- read_csv(unz(fn, fnames[8])) # $ Millions of chained 1997 dollars
+glimpse(dfnom)
+glimpse(dfreal)
+
+idvars <- c("GeoFIPS", "GeoName", "Region", "TableName", "LineCode", "IndustryClassification", "Description", "Unit")
+dfnom2 <- dfnom %>%
+  filter(LineCode==1, GeoFIPS < "90000") %>%
+  pivot_longer(cols=-all_of(idvars), names_to = "year") %>%
+  mutate(vname="gdp")
+
+dfreal2 <- dfreal %>%
+  filter(LineCode==1, GeoFIPS < "90000") %>%
+  pivot_longer(cols=-all_of(idvars), names_to = "year") %>%
+  mutate(vname="rgdp")
+
+df <- bind_rows(dfnom2, dfreal2) %>%
+  mutate(stfips=str_sub(GeoFIPS, 1, 2)) %>%
+  left_join(stcodes %>% select(stfips, stabbr), by="stfips")
+
+glimpse(df)
+count(df, TableName, Unit)
+count(df, stabbr, GeoName) # 50 states, DC, US
+count(df, year) # 1963-1977
+
+sgdp_sic.a <- df %>%
+  select(stabbr, year, vname, value) %>%
+  mutate(year=as.integer(year),
+         value=as.numeric(value)) %>%
+  pivot_wider(names_from=vname)
+
+comment(sgdp_sic.a) <- paste0("State nominal and real GDP SIC basis, annual, downloaded ", downloaddate)
+comment(sgdp_sic.a)
+usethis::use_data(sgdp_sic.a, overwrite=TRUE)
+
+
+#****************************************************************************************************
+#                Splice state annual GDP on NAICS and SIC basis ####
+#****************************************************************************************************
+sgdp.a  # US has real but not nominal
+sgdp_sic.a
+
+sic2 <- sgdp_sic.a %>%
+  group_by(stabbr) %>%
+  mutate(r_gdp1997=gdp / gdp[year==1997],
+         r_rgdp1997=rgdp / rgdp[year==1997]) %>%
+  ungroup()
+
+base <- cross_df(list(year=min(sic2$year):max(sgdp.a$year),
+                      stabbr=unique(c(sgdp.a$stabbr, sgdp_sic.a$stabbr))))
+
+spliced <- base %>%
+  left_join(sic2 %>% rename(gdp_sic=gdp, rgdp_sic=rgdp),
+            by=c("stabbr", "year")) %>%
+  left_join(sgdp.a %>% rename(gdp_naics=gdp, rgdp_naics=rgdp),
+            by=c("stabbr", "year")) %>%
+  group_by(stabbr) %>%
+  mutate(gdp=ifelse(is.na(gdp_naics), r_gdp1997 * gdp_naics[year==1997], gdp_naics),
+         rgdp=ifelse(is.na(rgdp_naics), r_rgdp1997 * rgdp_naics[year==1997], rgdp_naics))
+
+st <- "CA"
+spliced %>%
+  filter(stabbr==st) %>%
+  select(year, stabbr, gdp_sic, r_gdp1997, gdp_naics, gdp) %>%
+  mutate(check=gdp_sic / gdp)
+
+spliced %>%
+  filter(stabbr==st) %>%
+  select(year, stabbr, rgdp_sic, r_rgdp1997, rgdp_naics, rgdp) %>%
+  mutate(check=rgdp_sic / rgdp)
+
+sgdp_spliced.a <- spliced %>%
+  select(year, stabbr, gdp, rgdp) %>%
+  pivot_longer(cols=c(gdp, rgdp)) %>%
+  filter(!is.na(value)) %>%
+  arrange(name, stabbr, year) %>%
+  ungroup
+
+sgdp_spliced.a %>%
+  filter(stabbr=="NY", name=="rgdp") %>%
+  ggplot(aes(year, value)) +
+  geom_line() +
+  geom_point()
+
+comment(sgdp_spliced.a) <- paste0("State nominal and real GDP, spliced NAICs and SIC basis, annual, downloaded ", downloaddate)
+comment(sgdp_spliced.a)
+usethis::use_data(sgdp_spliced.a, overwrite=TRUE)
+
+
+#****************************************************************************************************
+#                Get state quarterly gdp data on NAICS basis ####
 #****************************************************************************************************
 # GeoFIPS,GeoName,Region,TableName,LineCode,IndustryClassification,Description,Unit 2
 # GeoFIPS,GeoName,Region,TableName,LineCode,IndustryClassification,Description,Unit 9
@@ -415,6 +523,7 @@ load("./data/spi.a.rda")
 glimpse(spi.a)
 comment(spi.a)
 spi.a %>% filter(stabbr=="NY") %>% tail(20)
+
 
 
 #****************************************************************************************************
