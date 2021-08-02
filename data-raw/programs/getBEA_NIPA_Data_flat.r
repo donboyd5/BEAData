@@ -248,5 +248,14 @@ nipa %>%
 
 memory()
 
+build(
+  pkg = here::here(),
+  path = NULL,
+  binary = FALSE,
+  vignettes = FALSE,
+  manual = FALSE,
+  args = NULL,
+  quiet = FALSE)
+
 
 
