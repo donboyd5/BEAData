@@ -3,10 +3,10 @@
 # alt-l, shift-alt-l
 # alt-r
 
-
+# start ----
 library("devtools")
 library("usethis")
-use_pipe()
+# use_pipe()
 
 
 #****************************************************************************************************
@@ -240,6 +240,11 @@ nipa %>%
   scale_y_continuous(name="$ billions, real") +
   ggtitle(paste0(var, ": Real GDP component, $ billions"))
 
+nipa %>%
+  filter(vname==var) %>%
+  filter(year>=2000) %>%
+  filter(freq=="Q") %>%
+  tail(10)
 
 memory()
 
