@@ -1,72 +1,68 @@
 
+# updated 1/22/2022
+
 # alt-o, shift-alt-o
 # alt-l, shift-alt-l
 # alt-r
 
 # start ----
-library("devtools")
-library("usethis")
+library(devtools)
+library(usethis)
 # use_pipe()
 
-
-#****************************************************************************************************
-#                Libraries ####
-#****************************************************************************************************
-library("magrittr")
-library("plyr") # needed for ldply; must be loaded BEFORE dplyr
-library("tidyverse")
+# libraries ---------------------------------------------------------------
+# library(conflicted)
+library(magrittr)
+# library(plyr) # needed for ldply; must be loaded BEFORE dplyr
+library(tidyverse)
 options(tibble.print_max = 60, tibble.print_min = 60) # if more than 60 rows, print 60 - enough for states
 # ggplot2 tibble tidyr readr purrr dplyr
+library(purrr)
 
-library("scales")
-library("hms") # hms, for times.
-library("stringr") # stringr, for strings.
-library("lubridate") # lubridate, for date/times.
-library("forcats") # forcats, for factors.
-library("readxl") # readxl, for .xls and .xlsx files.
-library("haven") # haven, for SPSS, SAS and Stata files.
-library("vctrs")
-library("precis")
+library(scales)
+library(hms) # hms, for times.
+library(stringr) # stringr, for strings.
+library(lubridate) # lubridate, for date/times.
+library(forcats) # forcats, for factors.
+library(readxl) # readxl, for .xls and .xlsx files.
+library(haven) # haven, for SPSS, SAS and Stata files.
+library(vctrs)
+library(precis)
 
-library("grDevices")
-library("knitr")
+library(grDevices)
+library(knitr)
 
-library("zoo") # for rollapply
+library(zoo) # for rollapply
 
-library("RColorBrewer") # for custom map colors
+library(RColorBrewer) # for custom map colors
 
-library("btools") # library that I created (install from github)
-library("bdata")
+library(btools) # library that I created (install from github)
+library(bdata)
 
-library("BEAData")
-library("apitools")
+library(BEAData)
+# library(apitools)
 
 
 # CAUTION ----
-# update the description file to ensure that these packages are imported
-# usethis::use_package("tidyverse")
-# usethis::use_package("tidyr")
-# usethis::use_package("magrittr")
+# if needed, update DESCRIPTION file to ensure that these packages are imported
+# usethis::use_package(tidyverse)
+# usethis::use_package(tidyr)
+# usethis::use_package(magrittr)
 # END CAUTION ----
 
-#****************************************************************************************************
-#                Functions ####
-#****************************************************************************************************
+tidyverse_conflicts()
 
 
-#****************************************************************************************************
-#                Globals ####
-#****************************************************************************************************
+# functions ---------------------------------------------------------------
 
+# globals ---------------------------------------------------------------
 # S1=Based on Census advance data, seasonally adjusted.
 # S2=Based on Census preliminary and final data, seasonally adjusted.
 # S3=Based on unpublished Census data, seasonally adjusted.
 # S4=Based on unpublished Census data, seasonally adjusted by BEA.
 
 
-#****************************************************************************************************
-#                Explore ####
-#****************************************************************************************************
+# Explore -----------------------------------------------------------------
 data(package="BEAData")
 glimpse(nipa)
 count(nipa, freq)
@@ -76,10 +72,8 @@ comment(nipa)
 # tabnum is of form "1.1.1"
 
 
-#****************************************************************************************************
-#                Get ALL BEA econ data from flat files ####
-#****************************************************************************************************
-# get all of the files ----
+# Get ALL BEA econ data from flat files -----------------------------------
+#.. get all of the files ----
 b.url <- "https://www.bea.gov/national/Release/TXT/FlatFiles.ZIP"
 b.file <- tempfile()
 system.time(download.file(b.url, b.file, mode="wb")) # 12 secs, maybe less
@@ -115,11 +109,7 @@ glimpse(NIPAvars)
 d <- count(NIPAvars, table, tabnum, tabname)
 d %>% ht
 
-# getNIPATable <- function(gtabnum) {
-#   NIPAvars %>% filter(tabnum==gtabnum) %>%
-#     arrange(line) %>%
-#     select(vname, line, vdesc, tabname)
-# }
+#.. review selected table info ----
 getNIPATable("1.1.1")
 getNIPATable("1.1.5") # nominal gdp
 getNIPATable("3.3")
@@ -167,7 +157,7 @@ dfa2 <- dfa %>%
   select(vname, date, year, freq, value, vdesc)
 glimpse(dfa2)
 ht(dfa2)
-anyDuplicated(dfa2)
+anyDuplicated(dfa2)  # should be zero
 # dfa2 %>% filter(vname=="Y313RC")  %>% tail
 # dfa2 %>% filter(vname=="Y315RC")  %>% tail
 
@@ -185,7 +175,7 @@ dfq2 <- dfq %>%
   select(vname, date, year, freq, value, vdesc)
 glimpse(dfq2)
 ht(dfq2)
-anyDuplicated(dfq2)
+anyDuplicated(dfq2) # should be zero
 
 #..Get monthly data ----
 dfm <- read_csv(unz(b.file, "nipadataM.txt"))
@@ -202,12 +192,10 @@ dfm2 <- dfm %>%
 dfm2 %>% filter(vname=="A034RC") %>% ht
 glimpse(dfm2)
 ht(dfm2)
-anyDuplicated(dfm2)
+anyDuplicated(dfm2) # should be zero
 
 
-#****************************************************************************************************
-#                Combine NIPA data and save ####
-#****************************************************************************************************
+# Combine NIPA data and save ----------------------------------------------
 glimpse(dfa2)
 glimpse(dfq2)
 glimpse(dfm2)
@@ -218,15 +206,13 @@ nipa <- bind_rows(dfa2, dfq2, dfm2)
 comment(nipa) <- paste0("NIPA data all tables, Annual, quarterly, and monthly, latest item released: ", release_date)
 comment(nipa)
 glimpse(nipa)
-system.time(usethis::use_data(nipa, overwrite=TRUE)) # can take a couple of minutes
+system.time(usethis::use_data(nipa, overwrite=TRUE)) # can take a minute
 
 usethis::use_data(NIPAvars, overwrite=TRUE)
 
 
-#****************************************************************************************************
-#                Explore final file ####
-#****************************************************************************************************
-glimpse(tabs)
+# Explore final file ------------------------------------------------------glimpse(tabs)
+
 tabs$TableTitle[1:10]
 getNIPATable("1.1.6")
 var <- "A191RX" # real GDP
@@ -240,6 +226,7 @@ nipa %>%
   scale_y_continuous(name="$ billions, real") +
   ggtitle(paste0(var, ": Real GDP component, $ billions"))
 
+
 nipa %>%
   filter(vname==var) %>%
   filter(year>=2000) %>%
@@ -247,15 +234,4 @@ nipa %>%
   tail(10)
 
 memory()
-
-build(
-  pkg = here::here(),
-  path = NULL,
-  binary = FALSE,
-  vignettes = FALSE,
-  manual = FALSE,
-  args = NULL,
-  quiet = FALSE)
-
-
 

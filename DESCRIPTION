@@ -1,7 +1,7 @@
 Package: BEAData
 Type: Package
 Title: BEA Data Files
-Version: 0.7.0
+Version: 0.7.4
 Author: Don Boyd
 Maintainer: Don Boyd <donboyd5@gmail.com>
 Description: Selected national and state-level regional BEA data, annual and quarterly.
@@ -9,10 +9,11 @@ License: GPL-2
 Depends:
     R (>= 3.5.0)
 Encoding: UTF-8
-LazyData: TRUE
+LazyData: true
+LazyDataCompression: bzip2
 Imports: 
     tidyverse,
     dplyr,
     magrittr,
     tidyr
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
