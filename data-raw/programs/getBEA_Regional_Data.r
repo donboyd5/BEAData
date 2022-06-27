@@ -1,4 +1,4 @@
-# 2/3/2022
+# 6/27/2022
 # TODO: update state PCE
 
 # Regional data sources
@@ -412,6 +412,7 @@ ht(rgdpq)
 sgdp.q_all <- bind_rows(ngdpq, rgdpq)
 comment(sgdp.q_all) <- paste0("State GDP all variables, quarterly, downloaded ", downloaddate)
 comment(sgdp.q_all)
+count(sgdp.q_all, stabbr)
 usethis::use_data(sgdp.q_all, overwrite=TRUE)
 
 # now save slimmed down file
@@ -425,6 +426,7 @@ ht(dfslim)
 sgdp.q <- dfslim
 comment(sgdp.q) <- paste0("State nominal and real GDP, quarterly, downloaded ", downloaddate)
 comment(sgdp.q)
+count(sgdp.q, stabbr)
 usethis::use_data(sgdp.q, overwrite=TRUE)
 
 rm(sgdp.q, sgdp.q_all)
@@ -433,7 +435,9 @@ load("./data/sgdp.q.rda")
 
 # Get SAINC1 state annual personal income data ----------------------------
 
-get_spi <- function(fn, vname, lines=NULL){
+fn <- fname_spia
+
+get_spi <- function(fn, vname, lcode=NULL){
   # GeoFIPS	GeoName	Region	TableName	LineCode	IndustryClassification	Description	Unit
   # lines is an integer vector of which lines to keep -- NULL means ALL
   fullpath <- paste0(bdir, "SAINC.zip")
@@ -448,19 +452,20 @@ get_spi <- function(fn, vname, lines=NULL){
                                     Unit=col_character(),
                                     .default= col_double()))
 
-  if(is.null(lines)) lines <- unique(df$LineCode)
+  if(is.null(lcode)) lcode <- unique(df$LineCode)
 
-  df2 <- df %>%
+  df2 <- df  |>
     mutate(GeoFIPS=str_extract(GeoFIPS, "[0-9]+"),
-           GeoName=str_remove(GeoName, "[*]+"),
+           GeoName=str_remove(GeoName, "[*]+") |> str_trim(),
            stabbr=stcodes$stabbr[match(GeoName, stcodes$stname)])
 
-  df3 <- df2 %>% filter(!is.na(stabbr)) %>%
+  df3 <- df2 %>% filter(!is.na(stabbr)) |>
     rename(line=LineCode,
-           spiname=Description) %>%
-    filter(line %in% lines) %>%
-    select(-GeoFIPS, -GeoName, -Region, -TableName, -IndustryClassification, -Unit) %>%
-    gather(year, value, -stabbr, -spiname, -line)
+           spiname=Description) |>
+    filter(line %in% lcode) |>
+    select(-GeoFIPS, -GeoName, -Region, -TableName, -IndustryClassification, -Unit) |>
+    pivot_longer(cols=-c(stabbr, spiname, line), names_to = c("year"))
+    # gather(year, value, -stabbr, -spiname, -line)
 
   df4 <- df3 %>%
     mutate(vname=vname,
@@ -500,9 +505,10 @@ unzip(fn, list=TRUE) %>% arrange(desc(Length)) %>% head(20)
 # save just the state data as spi.a - it also has summaries by region
 (fname_spia <- fnames %>% str_subset("SAINC1_"))
 (fname_spia_details <- fnames %>% str_subset("SAINC4_"))
-spi.a <- get_spi(fname_spia, "spi", lines=NULL)
+spi.a <- get_spi(fname_spia, "spi", lcode=NULL)
 # spi.a <- get_spi("SAINC1__ALL_AREAS_1929_2018.csv", "spi", lines=NULL)
 ht(spi.a)
+count(spi.a, stabbr)
 
 comment(spi.a) <- paste0("State personal income ($m), population (#), pci ($), annual, downloaded ", downloaddate)
 usethis::use_data(spi.a, overwrite=TRUE)
@@ -543,6 +549,8 @@ spi.a %>% filter(stabbr=="NY") %>% tail(20)
 spi.a_all <- get_spi(fname_spia_details, "spi")
 ht(spi.a_all)
 count(spi.a_all, line, spiname)
+count(spi.a_all, stabbr)
+
 comment(spi.a_all) <- paste0("State personal income DETAILS, annual, downloaded ", downloaddate)
 usethis::use_data(spi.a_all, overwrite=TRUE)
 
@@ -571,7 +579,7 @@ get_spiq <- function(fn, vname){
 
   df2 <- df %>%
     mutate(GeoFIPS=str_extract(GeoFIPS, "[0-9]+"), # remove nonnumeric \,"
-           GeoName=str_remove(GeoName, "[*]+"),
+           GeoName=str_remove(GeoName, "[*]+") |> str_trim(),
            stabbr=stcodes$stabbr[match(GeoName, stcodes$stname)])
 
   df3 <- df2 %>%
@@ -599,7 +607,7 @@ fnames_spiq <- unzip(zfn, list=TRUE) %>%
   filter(str_detect(Name, "ALL_AREAS")) %>%
   arrange(Name) %>%
   pull(Name)
-fn <- "SQINC1__ALL_AREAS_1948_2021.csv"
+fn <- "SQINC1__ALL_AREAS_1948_2022.csv"
 
 (fname_spiq <- fnames_spiq %>% str_subset("SQINC1_"))
 (fname_spiq_details <- fnames_spiq %>% str_subset("SQINC4_"))
@@ -608,8 +616,8 @@ vname <- "spi"
 # save just the state data as sgdp.q - it also has summaries by region
 
 # peek at the files as needed
-fn <- "SQINC1__ALL_AREAS_1948_2021.csv"
-fn <- "SQINC4__ALL_AREAS_1948_2021.csv"
+fn <- "SQINC1__ALL_AREAS_1948_2022.csv"
+fn <- "SQINC4__ALL_AREAS_1948_2022.csv"
 read_csv(unz(zfn, fn), n_max=10) %>%
   select(c(1:9, ncol(.))) %>%
   as_tibble
@@ -627,6 +635,7 @@ read_csv(unz(zfn, fn), n_max=10) %>%
 df <- get_spiq(fname_spiq_details, "spi")
 ht(df)
 count(df, line, description)
+count(df, stabbr)
 
 # add vnames
 vnames <- read_csv("line, vname
@@ -663,6 +672,7 @@ df2 %>% select(stabbr, date, vname, value) %>% spread(vname, value)
 # save
 spi.q <- df2
 comment(spi.q) <- paste0("State personal income components and selected other variables, quarterly, downloaded ", downloaddate)
+count(spi.q, stabbr)
 usethis::use_data(spi.q, overwrite=TRUE)
 
 spiw.q <- spi.q %>%
@@ -671,6 +681,7 @@ spiw.q <- spi.q %>%
 glimpse(spiw.q)
 comment(spiw.q) <- paste0("State personal income components and selected other variables, wide, quarterly, downloaded ",
                           downloaddate)
+count(spiw.q, stabbr)
 usethis::use_data(spiw.q, overwrite=TRUE)
 
 
